@@ -68,6 +68,7 @@
 
 .status-tags {
     display: flex;
+    flex-wrap: wrap;
     gap: 6px;
     margin-top: 16px;
     padding-top: 16px;
@@ -91,12 +92,43 @@
     color: #6b7280;
 }
 
+.status-tag.linked {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.status-tag.warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
 .student-footer {
     padding: 16px 24px;
     background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
     display: flex;
     gap: 8px;
     align-items: center;
+}
+
+.credential-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+}
+
+.credential-item label,
+.credential-item span {
+    grid-column: 1 / 2;
+}
+
+.credential-item span {
+    overflow-wrap: anywhere;
+}
+
+.credential-item .copy-credential {
+    grid-column: 2 / 3;
+    grid-row: 1 / span 2;
 }
 
 .no-students {

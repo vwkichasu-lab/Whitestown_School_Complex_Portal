@@ -117,6 +117,12 @@ function showEnrollmentCredentials(data) {
     const student = credentials.student || {};
     const parent = credentials.parent || {};
     const parentPasswordText = parent.password || (parent.linked ? 'Existing password unchanged' : 'No parent account created');
+    const credentialRows = [
+        ['Student Username', student.username || 'Not available'],
+        ['Student Password', student.password || 'Not available'],
+        ['Parent Username', parent.username || 'No parent account created'],
+        ['Parent Password', parentPasswordText],
+    ];
     const modal = document.createElement('div');
     modal.className = 'modal show';
     modal.innerHTML = `
@@ -128,22 +134,15 @@ function showEnrollmentCredentials(data) {
             <div class="modal-body">
                 <p>${data.message}</p>
                 <div class="info-grid">
-                    <div class="info-item">
-                        <label>Student Username</label>
-                        <span>${student.username || 'Not available'}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Student Password</label>
-                        <span>${student.password || 'Not available'}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Parent Username</label>
-                        <span>${parent.username || 'No parent account created'}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Parent Password</label>
-                        <span>${parentPasswordText}</span>
-                    </div>
+                    ${credentialRows.map(([label, value]) => `
+                        <div class="info-item credential-item">
+                            <label>${label}</label>
+                            <span>${value}</span>
+                            <button type="button" class="btn btn-secondary btn-sm copy-credential" data-copy="${value}">
+                                <i class="bi bi-clipboard"></i> Copy
+                            </button>
+                        </div>
+                    `).join('')}
                 </div>
             </div>
             <div class="modal-footer">
@@ -156,6 +155,14 @@ function showEnrollmentCredentials(data) {
     document.body.appendChild(modal);
     modal.querySelectorAll('.close-modal').forEach(button => {
         button.addEventListener('click', () => modal.remove());
+    });
+    modal.querySelectorAll('.copy-credential').forEach(button => {
+        button.addEventListener('click', async () => {
+            const value = button.dataset.copy;
+            if (!value || value.includes('No parent') || value.includes('Not available') || value.includes('unchanged')) return;
+            await navigator.clipboard.writeText(value);
+            showToast('Copied to clipboard', 'success');
+        });
     });
     modal.querySelector('.reload-page').addEventListener('click', () => window.location.reload());
     modal.addEventListener('click', event => {

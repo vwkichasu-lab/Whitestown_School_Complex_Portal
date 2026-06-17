@@ -721,7 +721,10 @@ def teacher_update(request, teacher_id):
 @login_required
 def student_list(request):
     """List all students with filtering and pagination"""
-    students = StudentProfile.objects.select_related('user', 'current_class').order_by('user__first_name', 'user__last_name')
+    students = StudentProfile.objects.select_related(
+        'user',
+        'current_class'
+    ).prefetch_related('parent_profiles__user').order_by('user__first_name', 'user__last_name')
     
     class_id = request.GET.get('class')
     if class_id:
@@ -744,6 +747,7 @@ def student_list(request):
     total_students = students.count()
     active_students = students.filter(is_active=True).count()
     inactive_students = students.filter(is_active=False).count()
+    linked_parent_count = students.filter(parent_profiles__isnull=False).distinct().count()
     
     class_counts = ClassLevel.objects.annotate(
         student_count=Count('students')
@@ -763,6 +767,7 @@ def student_list(request):
         'total_students': total_students,
         'active_students': active_students,
         'inactive_students': inactive_students,
+        'linked_parent_count': linked_parent_count,
         'class_counts': list(class_counts),
     }
     return render(request, 'pages/admin_dashboard/students.html', {'context': context})

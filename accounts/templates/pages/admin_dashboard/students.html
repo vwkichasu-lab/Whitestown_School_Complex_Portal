@@ -49,6 +49,10 @@
                         <div class="stat-value">{{ context.classes.count|default_if_none:0|shortnum }}</div>
                         <div class="stat-label">Classes</div>
                     </div>
+                    <div class="stat-box">
+                        <div class="stat-value">{{ context.linked_parent_count|default_if_none:0|shortnum }}</div>
+                        <div class="stat-label">Parent Links</div>
+                    </div>
                 </div>
             </div>
 
@@ -133,6 +137,15 @@
                                 <span class="status-tag {% if student.is_active %}active{% else %}inactive{% endif %}">
                                     {% if student.is_active %}Active{% else %}Inactive{% endif %}
                                 </span>
+                                {% if student.parent_profiles.exists %}
+                                    <span class="status-tag linked">
+                                        <i class="bi bi-link-45deg"></i> Parent Portal Linked
+                                    </span>
+                                {% else %}
+                                    <span class="status-tag warning">
+                                        <i class="bi bi-exclamation-circle"></i> Parent Not Linked
+                                    </span>
+                                {% endif %}
                             </div>
                         </div>
                         <div class="student-footer">
