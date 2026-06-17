@@ -21,6 +21,33 @@
         </div>
     </section>
 
+    <section class="control-strip">
+        <article class="setup-summary">
+            <div>
+                <span class="eyebrow">Setup Progress</span>
+                <h2>{{ context.setup_completion }}% ready</h2>
+                <p>{{ context.completed_setup_tasks }} of {{ context.setup_tasks|length }} core setup steps completed.</p>
+            </div>
+            <div class="setup-meter" aria-label="Setup progress">
+                <span style="width: {{ context.setup_completion }}%;"></span>
+            </div>
+        </article>
+        <article class="term-summary">
+            <span class="eyebrow">Academic Year</span>
+            <strong>{{ context.current_academic_year.name|default:"Not set" }}</strong>
+            {% if context.current_term %}
+                <small>{{ context.current_term.name }}{% if context.term_days_left != None %} - {{ context.term_days_left }} day{{ context.term_days_left|pluralize }} left{% endif %}</small>
+            {% else %}
+                <small>Create the current academic year to activate term tracking.</small>
+            {% endif %}
+        </article>
+        <article class="term-summary attention">
+            <span class="eyebrow">Needs Attention</span>
+            <strong>{{ context.setup_alerts|length }}</strong>
+            <small>Open setup item{{ context.setup_alerts|length|pluralize }} across the school system.</small>
+        </article>
+    </section>
+
     <section class="kpi-grid">
         <a href="{% url 'student_list' %}" class="kpi-card blue">
             <span class="kpi-icon"><i class="bi bi-mortarboard"></i></span>
@@ -72,7 +99,46 @@
         </a>
     </section>
 
+    <section class="module-grid">
+        {% for module in context.dashboard_modules %}
+            <a href="{% url module.url %}" class="module-card {{ module.tone }}">
+                <span class="module-icon"><i class="bi {{ module.icon }}"></i></span>
+                <div>
+                    <small>{{ module.title }}</small>
+                    <strong>{{ module.count }}</strong>
+                    <span>{{ module.detail }}</span>
+                    <b>{{ module.action }} <i class="bi bi-arrow-right"></i></b>
+                </div>
+            </a>
+        {% endfor %}
+    </section>
+
     <section class="dashboard-grid">
+        <article class="panel setup-panel">
+            <div class="panel-header">
+                <div>
+                    <span class="eyebrow">Build Order</span>
+                    <h2>What To Complete First</h2>
+                </div>
+            </div>
+            <div class="setup-task-list">
+                {% for task in context.setup_tasks %}
+                    <a href="{% url task.url %}" class="setup-task {% if task.done %}done{% endif %}">
+                        <i class="bi {{ task.icon }}"></i>
+                        <div>
+                            <strong>{{ task.title }}</strong>
+                            <span>{{ task.detail }}</span>
+                        </div>
+                        {% if task.done %}
+                            <b>Done</b>
+                        {% else %}
+                            <b>Open</b>
+                        {% endif %}
+                    </a>
+                {% endfor %}
+            </div>
+        </article>
+
         <article class="panel calendar-panel">
             <div class="panel-header">
                 <div>
@@ -126,6 +192,9 @@
             {% endif %}
         </article>
 
+    </section>
+
+    <section class="dashboard-grid">
         <article class="panel actions-panel">
             <div class="panel-header">
                 <div>
@@ -168,6 +237,9 @@
             </div>
         </article>
 
+    </section>
+
+    <section class="dashboard-grid">
         <article class="panel capacity-panel">
             <div class="panel-header">
                 <div>
@@ -193,6 +265,34 @@
                         <span>No class capacity data yet.</span>
                     </div>
                 {% endfor %}
+            </div>
+        </article>
+
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <span class="eyebrow">School Structure</span>
+                    <h2>Current Setup</h2>
+                </div>
+                <a href="{% url 'class_list' %}" class="panel-link">Edit Structure</a>
+            </div>
+            <div class="structure-grid">
+                <div>
+                    <strong>{{ context.total_divisions }}</strong>
+                    <span>Divisions</span>
+                </div>
+                <div>
+                    <strong>{{ context.total_classes }}</strong>
+                    <span>Class levels</span>
+                </div>
+                <div>
+                    <strong>{{ context.total_streams }}</strong>
+                    <span>Streams</span>
+                </div>
+                <div>
+                    <strong>{{ context.assigned_class_subjects }}</strong>
+                    <span>Subject assignments</span>
+                </div>
             </div>
         </article>
     </section>

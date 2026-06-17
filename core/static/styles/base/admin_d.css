@@ -408,3 +408,66 @@ body {
     color: var(--text-primary);
     font-weight: 500;
 }
+
+@media (max-width: 800px) {
+    .dashboard-container {
+        display: block;
+    }
+
+    .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        min-height: 0;
+        overflow: visible;
+    }
+
+    .sidebar-header {
+        padding: 16px;
+    }
+
+    .school-brand {
+        align-items: center;
+    }
+
+    .school-badge {
+        width: 44px;
+        height: 44px;
+        font-size: 0.82rem;
+    }
+
+    .sidebar-header h2 {
+        font-size: 0.98rem;
+    }
+
+    .nav-links {
+        padding-bottom: 12px;
+    }
+
+    .nav-links a {
+        padding: 10px 16px;
+        font-size: 0.92rem;
+    }
+
+    .main-content {
+        margin-left: 0;
+        padding: 16px;
+    }
+}
+
+@media (max-width: 520px) {
+    .school-brand {
+        gap: 10px;
+    }
+
+    .nav-section-btn {
+        width: calc(100% - 20px);
+        margin-left: 10px;
+        margin-right: 10px;
+    }
+
+    .confirmation-actions,
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+}

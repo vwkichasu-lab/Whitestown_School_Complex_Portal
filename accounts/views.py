@@ -7,7 +7,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 from django.core.paginator import Paginator
 import json
 from .models import User, TeacherProfile, StudentProfile, StaffProfile, ParentProfile
-from academics.models import Subject, ClassLevel, Term, Result, AcademicYear, ClassSubject
+from academics.models import Subject, ClassLevel, Term, Result, AcademicYear, ClassSubject, SchoolDivision, ClassStream
 from django.utils import timezone
 from datetime import timedelta
 from django.db import transaction
@@ -1012,10 +1012,17 @@ def admin_dashboard(request):
     elective_subjects = Subject.objects.filter(category='elective', is_active=True).count()
     assigned_class_subjects = ClassSubject.objects.count()
     class_subjects_with_teachers = ClassSubject.objects.filter(teacher__isnull=False).count()
+    class_subjects_without_teachers = ClassSubject.objects.filter(teacher__isnull=True).count()
     classes_without_form_teacher = ClassLevel.objects.filter(is_active=True, form_teacher__isnull=True).count()
+    classes_without_subjects = ClassLevel.objects.filter(is_active=True).annotate(
+        subject_total=Count('classsubject')
+    ).filter(subject_total=0).count()
     students_without_class = StudentProfile.objects.filter(is_active=True, current_class__isnull=True).count()
     published_results = Result.objects.filter(is_published=True).count()
     unpublished_results = Result.objects.filter(is_published=False).count()
+    total_divisions = SchoolDivision.objects.filter(is_active=True).count()
+    total_streams = ClassStream.objects.filter(is_active=True).count()
+    current_academic_year = AcademicYear.objects.filter(is_current=True).first()
 
     setup_alerts = []
     if total_classes == 0:
@@ -1046,13 +1053,108 @@ def admin_dashboard(request):
             'url': 'student_list',
             'icon': 'bi-person-exclamation',
         })
+    if class_subjects_without_teachers:
+        setup_alerts.append({
+            'title': f'{class_subjects_without_teachers} subject assignment(s) need teachers',
+            'detail': 'Assign teachers so workloads and results are traceable.',
+            'url': 'class_list',
+            'icon': 'bi-diagram-3',
+        })
 
     if current_term:
         term_total_days = max((current_term.end_date - current_term.start_date).days + 1, 1)
         term_elapsed_days = min(max((today - current_term.start_date).days + 1, 0), term_total_days)
         current_term_progress = round((term_elapsed_days / term_total_days) * 100)
+        term_days_left = max((current_term.end_date - today).days, 0)
     else:
         current_term_progress = 0
+        term_days_left = None
+
+    setup_tasks = [
+        {
+            'title': 'Set academic year',
+            'detail': 'Create the current academic year and GES-based terms.',
+            'done': AcademicYear.objects.exists(),
+            'url': 'create_academic_year',
+            'icon': 'bi-calendar2-check',
+        },
+        {
+            'title': 'Create divisions and classes',
+            'detail': 'Set Early Years, Primary, JHS, streams, and class capacity.',
+            'done': total_classes > 0 and total_divisions > 0,
+            'url': 'class_list',
+            'icon': 'bi-building-add',
+        },
+        {
+            'title': 'Add GES subjects',
+            'detail': 'Attach subjects to the correct class levels.',
+            'done': total_subjects > 0 and assigned_class_subjects > 0,
+            'url': 'class_list',
+            'icon': 'bi-journal-check',
+        },
+        {
+            'title': 'Add staff and teachers',
+            'detail': 'Create leadership, administrators, non-teaching staff, and teachers.',
+            'done': total_staff > 0 and total_teachers > 0,
+            'url': 'create_admin_page',
+            'icon': 'bi-people',
+        },
+        {
+            'title': 'Assign teachers',
+            'detail': 'Set form teachers and subject teachers for every class.',
+            'done': total_classes > 0 and classes_without_form_teacher == 0 and class_subjects_without_teachers == 0,
+            'url': 'class_list',
+            'icon': 'bi-person-check',
+        },
+        {
+            'title': 'Enroll students',
+            'detail': 'Register learners and place them into their classes.',
+            'done': total_students > 0 and students_without_class == 0,
+            'url': 'student_create',
+            'icon': 'bi-mortarboard',
+        },
+    ]
+    completed_setup_tasks = sum(1 for task in setup_tasks if task['done'])
+    setup_completion = round((completed_setup_tasks / len(setup_tasks)) * 100)
+
+    dashboard_modules = [
+        {
+            'title': 'Students',
+            'count': total_students,
+            'detail': f'{active_students} active, {students_without_class} without class',
+            'url': 'student_list',
+            'action': 'Manage students',
+            'icon': 'bi-mortarboard',
+            'tone': 'blue',
+        },
+        {
+            'title': 'Staff and Teachers',
+            'count': total_staff + total_teachers,
+            'detail': f'{active_teachers} active teachers, {total_staff} leadership and staff',
+            'url': 'admin_list',
+            'action': 'Manage staff',
+            'icon': 'bi-person-badge',
+            'tone': 'green',
+        },
+        {
+            'title': 'Classes and Subjects',
+            'count': total_classes,
+            'detail': f'{total_subjects} subjects, {total_streams} class streams',
+            'url': 'class_list',
+            'action': 'Build classes',
+            'icon': 'bi-building',
+            'tone': 'violet',
+        },
+        {
+            'title': 'Calendar and Results',
+            'count': recent_results,
+            'detail': f'{published_results} published, {unpublished_results} pending result entries',
+            'url': 'results_dashboard',
+            'action': 'Open results',
+            'icon': 'bi-graph-up-arrow',
+            'tone': 'amber',
+        },
+    ]
     
     context = {
         'total_users': total_users,
@@ -1072,7 +1174,9 @@ def admin_dashboard(request):
         'teacher_employment': list(teacher_employment),
         'current_term': current_term,
         'next_term': next_term,
+        'current_academic_year': current_academic_year,
         'current_term_progress': current_term_progress,
+        'term_days_left': term_days_left,
         
         'top_students': list(top_students),
         'subject_stats': list(subject_stats),
@@ -1082,12 +1186,20 @@ def admin_dashboard(request):
         'elective_subjects': elective_subjects,
         'assigned_class_subjects': assigned_class_subjects,
         'class_subjects_with_teachers': class_subjects_with_teachers,
+        'class_subjects_without_teachers': class_subjects_without_teachers,
         'classes_without_form_teacher': classes_without_form_teacher,
+        'classes_without_subjects': classes_without_subjects,
         'students_without_class': students_without_class,
         'published_results': published_results,
         'unpublished_results': unpublished_results,
+        'total_divisions': total_divisions,
+        'total_streams': total_streams,
         'class_capacity': list(class_capacity),
         'setup_alerts': setup_alerts,
+        'setup_tasks': setup_tasks,
+        'setup_completion': setup_completion,
+        'completed_setup_tasks': completed_setup_tasks,
+        'dashboard_modules': dashboard_modules,
     }
 
     return render(request, 'accounts/admin_dashboard.html', {'context': context})
