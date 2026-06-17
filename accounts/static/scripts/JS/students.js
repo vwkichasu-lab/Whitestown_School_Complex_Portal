@@ -112,6 +112,57 @@ async function resetPassword(studentId) {
     }
 }
 
+function showEnrollmentCredentials(data) {
+    const credentials = data.credentials || {};
+    const student = credentials.student || {};
+    const parent = credentials.parent || {};
+    const parentPasswordText = parent.password || (parent.linked ? 'Existing password unchanged' : 'No parent account created');
+    const modal = document.createElement('div');
+    modal.className = 'modal show';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 620px;">
+            <div class="modal-header">
+                <h2><i class="bi bi-check-circle"></i> Enrollment Complete</h2>
+                <button class="modal-close close-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <p>${data.message}</p>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Student Username</label>
+                        <span>${student.username || 'Not available'}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Student Password</label>
+                        <span>${student.password || 'Not available'}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Parent Username</label>
+                        <span>${parent.username || 'No parent account created'}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Parent Password</label>
+                        <span>${parentPasswordText}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary close-modal">Close</button>
+                <button type="button" class="btn btn-primary reload-page">View Students</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    modal.querySelectorAll('.close-modal').forEach(button => {
+        button.addEventListener('click', () => modal.remove());
+    });
+    modal.querySelector('.reload-page').addEventListener('click', () => window.location.reload());
+    modal.addEventListener('click', event => {
+        if (event.target === modal) modal.remove();
+    });
+}
+
 // Change password function for students
 async function changePassword(studentId) {
     try {
@@ -593,12 +644,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (data.success) {
                     showToast(data.message, 'success');
-                    
-                    setTimeout(() => {
-                        const modal = document.getElementById('studentModal');
-                        if (modal) modal.style.display = 'none';
-                        window.location.reload();
-                    }, 1500);
+                    const modal = document.getElementById('studentModal');
+                    if (modal) modal.style.display = 'none';
+                    this.reset();
+                    showEnrollmentCredentials(data);
                 } else {
                     showToast(data.error || 'Failed to register student', 'error');
                 }

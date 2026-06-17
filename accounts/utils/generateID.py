@@ -1,4 +1,4 @@
-from accounts.models import TeacherProfile, StudentProfile, StaffProfile
+from accounts.models import TeacherProfile, StudentProfile, StaffProfile, ParentProfile
 import random
 from django.db import transaction
 from django.db.models import Max
@@ -118,3 +118,23 @@ def generate_student_id():
     
     # If all methods fail, raise an error
     raise Exception("Cannot generate unique student ID - system overloaded")
+
+
+def generate_parent_id():
+    """
+        Generate unique parent ID in the format: WSC-PAR-XXXXXX (6 random digits)
+    """
+    max_attempts = 100
+    for _ in range(max_attempts):
+        random_number = random.randint(100000, 999999)
+        new_id = f"WSC-PAR-{random_number}"
+        if not ParentProfile.objects.filter(parent_id=new_id).exists():
+            return new_id
+
+    existing_ids = set(ParentProfile.objects.values_list('parent_id', flat=True))
+    for number in range(100000, 1000000):
+        new_id = f"WSC-PAR-{number}"
+        if new_id not in existing_ids:
+            return new_id
+
+    raise Exception("Cannot generate unique parent ID")

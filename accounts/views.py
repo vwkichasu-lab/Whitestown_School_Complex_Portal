@@ -6,12 +6,13 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods, require_POST
 from django.core.paginator import Paginator
 import json
+import re
 from .models import User, TeacherProfile, StudentProfile, StaffProfile, ParentProfile
 from academics.models import Subject, ClassLevel, Term, Result, AcademicYear, ClassSubject, SchoolDivision, ClassStream
 from django.utils import timezone
 from datetime import timedelta
 from django.db import transaction
-from .utils.generateID import generate_teacher_id, generate_student_id, generate_staff_id
+from .utils.generateID import generate_teacher_id, generate_student_id, generate_staff_id, generate_parent_id
 from core.views import get_recent_activities, get_teacher_workload
 from django.db.models import Case, When, Q, Count, Avg, Max
 from django.db import models, IntegrityError
@@ -118,7 +119,9 @@ def register_teacher(request):
         phone_number = data.get("phone_number")
         gender = data.get("gender")
         password = data.get("password")
-        date_of_birth = data.get("date_of_birth")
+        date_of_birth = data.get("date_of_birth") or None
+        if date_of_birth and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date_of_birth):
+            date_of_birth = None
         profile_picture = request.FILES.get("profile_picture")
         employment_type = data.get("employment_type", "full_time")
         teaching_level = data.get("teaching_level") or "primary"
@@ -784,7 +787,9 @@ def student_create(request):
         phone_number = data.get("phone_number")
         gender = data.get("gender")
         password = data.get("password")
-        date_of_birth = data.get("date_of_birth")
+        date_of_birth = data.get("date_of_birth") or None
+        if date_of_birth and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date_of_birth):
+            date_of_birth = None
         profile_picture = request.FILES.get("profile_picture")
         current_class_id = data.get("current_class")
         parent_full_name = data.get("parent_full_name")
@@ -792,22 +797,33 @@ def student_create(request):
         parent_email = data.get("parent_email")
         parent_address = data.get("parent_address")
         emergency_contact_relation = data.get("emergency_contact_relation")
+        create_parent_account = str(data.get("create_parent_account", "on")).lower() in ["on", "true", "1", "yes"]
         
         # Validation
         if not all([first_name, last_name]):
             return JsonResponse({
                 'success': False, 
-                'error': 'First name, last name, and email are required.'
+                'error': 'First name and last name are required.'
             }, status=400)
+
+        existing_parent_user = None
+        if create_parent_account and parent_email:
+            existing_parent_user = User.objects.filter(email__iexact=parent_email).first()
+            if existing_parent_user and existing_parent_user.role != "parent":
+                return JsonResponse({
+                    'success': False,
+                    'error': 'The parent email already belongs to a non-parent user.'
+                }, status=400)
         
-        if User.objects.filter(email=email).exists():
+        student_id = generate_student_id()
+        student_password = password or "Student@12345"
+        student_email = email or f"{student_id.lower()}@whitestown.local"
+
+        if User.objects.filter(email=student_email).exists():
             return JsonResponse({
                 'success': False, 
-                'error': 'A user with this email already exists.'
+                'error': 'A user with this student email already exists.'
             }, status=400)
-        
-
-        student_id = generate_student_id()
 
         if User.objects.filter(username=student_id).exists():
             return JsonResponse({
@@ -819,8 +835,8 @@ def student_create(request):
  
         user = User.objects.create_user(
             username=student_id,
-            email=email,
-            password=password or "changeme123",
+            email=student_email,
+            password=student_password,
             first_name=first_name,
             last_name=last_name,
             role="student",
@@ -844,10 +860,55 @@ def student_create(request):
             parent_address=parent_address,
             emergency_contact_relation=emergency_contact_relation,
         )
+
+        parent_user = None
+        parent_profile = None
+        parent_password = "Parent@12345"
+        parent_created = False
+
+        if create_parent_account and parent_email:
+            parent_user = existing_parent_user
+
+            if not parent_user:
+                name_parts = (parent_full_name or "Parent Guardian").split()
+                parent_first_name = name_parts[0]
+                parent_last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else "Guardian"
+                parent_user = User.objects.create_user(
+                    username=parent_email,
+                    email=parent_email,
+                    password=parent_password,
+                    first_name=parent_first_name,
+                    last_name=parent_last_name,
+                    role="parent",
+                    phone_number=parent_phone,
+                )
+                parent_created = True
+
+            parent_profile, _ = ParentProfile.objects.get_or_create(
+                user=parent_user,
+                defaults={
+                    'parent_id': generate_parent_id(),
+                    'relationship': 'guardian',
+                    'address': parent_address,
+                }
+            )
+            parent_profile.students.add(student_profile)
         
         response_data = {
             'success': True,
             'message': f'Student {user.get_full_name()} registered successfully with ID {student_id}.',
+            'credentials': {
+                'student': {
+                    'username': student_id,
+                    'password': student_password,
+                },
+                'parent': {
+                    'username': parent_user.username if parent_user else None,
+                    'password': parent_password if parent_created else None,
+                    'linked': bool(parent_profile),
+                    'created': parent_created,
+                }
+            }
         }
         
         if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
