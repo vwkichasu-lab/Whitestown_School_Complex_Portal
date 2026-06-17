@@ -1,0 +1,88 @@
+
+    {% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whitestown School Complex - {% block title %}{% endblock %} </title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="{% static 'styles/base/admin_d.css' %}">
+    {% block extra_css %}{% endblock %}
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="dashboard-container">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="school-brand">
+                    <div class="school-badge">WSC</div>
+                    <div>
+                        <h2>Whitestown School Complex</h2>
+                        <div class="school-motto">Excellence in Education</div>
+                    </div>
+                </div>
+            </div>
+            <ul class="nav-links">
+                <li class="nav-section-toggle">
+                    <button type="button" class="nav-section-btn" aria-expanded="true">
+                        <span>Main</span><i class="bi bi-chevron-down"></i>
+                    </button>
+                    <ul class="nav-section-links">
+                        <li><a href="{% url 'admin_dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                    </ul>
+                </li>
+                <!-- <li><a href="#"><i class="bi bi-graph-up"></i> Analytics</a></li> -->
+
+                <li class="nav-section-toggle">
+                    <button type="button" class="nav-section-btn" aria-expanded="true">
+                        <span>Management</span><i class="bi bi-chevron-down"></i>
+                    </button>
+                    <ul class="nav-section-links">
+                        <li><a href="{% url 'teachers_list' %}"><i class="bi bi-person-badge"></i> Teachers</a></li>
+                        <li><a href="{% url 'student_list' %}"><i class="bi bi-mortarboard"></i> Students</a></li>
+                        <li><a href="{% url 'class_list' %}"><i class="bi bi-building"></i> Classes & Subjects</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-section-toggle">
+                    <button type="button" class="nav-section-btn" aria-expanded="true">
+                        <span>Academic</span><i class="bi bi-chevron-down"></i>
+                    </button>
+                    <ul class="nav-section-links">
+                        <li><a href="{% url 'results_dashboard' %}"><i class="bi bi-file-earmark-text"></i> Results</a></li>
+                        <li><a href="{% url 'terms_list' %}"><i class="bi bi-calendar-event"></i> Academic Calendar</a></li>
+                    </ul>
+                </li>
+                <!-- <li><a href=""><i class="bi bi-bar-chart-line"></i> Reports</a></li> -->
+
+                <li class="nav-section-toggle">
+                    <button type="button" class="nav-section-btn" aria-expanded="true">
+                        <span>System</span><i class="bi bi-chevron-down"></i>
+                    </button>
+                    <ul class="nav-section-links">
+                        <li><a href="{% url 'profile' %}"><i class="bi bi-person-circle"></i> Profile</a></li>
+                        <li><a href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+
+        </nav>
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    {% block js %}{% endblock %}
+
+    <script type="module" src="{% static 'scripts/JS/admin_d.js' %}"></script>
+
+
+
+    
+</body>
+</html>

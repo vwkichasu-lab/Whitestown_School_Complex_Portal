@@ -1,0 +1,144 @@
+{% extends "base/teacher_d.html" %}
+{% load static %}
+
+{% load number_format %}
+
+{% block title %}My Students - Teacher Portal{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'styles/pages/students_management.css' %}">
+{% endblock extra_css %}
+
+{% block content %}
+<div class="main-content">
+    <div class="content-header">
+        <div class="header-content">
+            <h1>👨‍🎓 My Students</h1>
+            <p>Students in your classes</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-outline-primary" id="exportStudents">
+                <i class="bi bi-download"></i> Export List
+            </button>
+        </div>
+    </div>
+
+    <div class="filters-card">
+        <form method="get" class="filters-form">
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label>Filter by Class</label>
+                    <select title="select class" name="class" class="form-control" onchange="this.form.submit()">
+                        <option value="">All Classes</option>
+                        {% for class in classes_taught %}
+                            <option value="{{ class.id }}" {% if current_class_filter == class.id|stringformat:"s" %}selected{% endif %}>
+                                {{ class.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <a href="{% url 'my_students' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-clockwise"></i> Reset
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="students-grid">
+        {% for student in students %}
+        <div class="student-card">
+            <div class="student-header">
+                <div class="student-avatar">
+                    {% if student.user.profile_picture %}
+                        <img src="{{ student.user.profile_picture.url }}" alt="{{ student.user.get_full_name }}">
+                    {% else %}
+                        <i class="bi bi-person-circle"></i>
+                    {% endif %}
+                </div>
+                <div class="student-info">
+                    <h3>{{ student.user.get_full_name }}</h3>
+                    <span class="student-id">{{ student.student_id }}</span>
+                </div>
+            </div>
+            
+            <div class="student-details">
+                <div class="detail-item">
+                    <i class="bi bi-building"></i>
+                    <span>{{ student.current_class.name }}</span>
+                </div>
+
+                <div class="detail-item">
+                    <i class="bi bi-telephone"></i>
+                    <span>Parent Phone: {{ student.parent_phone|default:"No phone" }}</span>
+                </div>
+                
+                <div class="detail-item">
+                    <i class="bi bi-envelope"></i>
+                    <span>Parent Email: {{ student.parent_email|default:"No email" }}</span>
+                </div>
+
+            </div>
+            
+            <div class="student-stats">
+                <div class="stat">
+                    <small>Average Score</small>
+                </div>
+                <div class="stat">
+                    <small>Results</small>
+                    <strong>{{ student.result_set.count }}</strong>
+                </div>
+            </div>
+            
+            <div class="student-actions">
+                <button class="btn btn-outline-primary btn-sm view-results" 
+                        data-student-id="{{ student.id }}"
+                        data-student-name="{{ student.user.get_full_name }}">
+                    <i class="bi bi-journal-text"></i> Results
+                </button>
+                <a href="{% url 'manage_results' %}?student={{ student.id }}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-circle"></i> Add Result
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <i class="bi bi-people-slash"></i>
+            <h4>No Students Found</h4>
+            <p>
+                {% if current_class_filter %}
+                    No students found in the selected class.
+                {% else %}
+                    You don't have any students in your classes yet.
+                {% endif %}
+            </p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="modal fade" id="resultsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resultsModalTitle">Student Results</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="resultsModalBody">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'Scripts/JS/students_management.js' %}"></script>
+
+{% endblock %}

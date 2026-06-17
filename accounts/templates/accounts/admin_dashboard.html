@@ -1,0 +1,322 @@
+{% extends "base/admin_d.html" %}
+{% load static %}
+
+{% block title %}Admin Dashboard - Whitestown School Complex{% endblock title %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'styles/admin_dashboard.css' %}">
+{% endblock extra_css %}
+
+{% block content %}
+<main class="main-content">
+    <section class="dashboard-hero">
+        <div>
+            <span class="eyebrow">School Control Room</span>
+            <h1>Good day, {{ user.first_name|default:user.username }}</h1>
+            <p>Monitor school setup, learners, staff, classes, subjects, results, and calendar activity from one place.</p>
+        </div>
+        <div class="hero-meta">
+            <span id="current-date"></span>
+            <strong>{{ user.get_role_display|default:"Administrator" }}</strong>
+        </div>
+    </section>
+
+    <section class="kpi-grid">
+        <a href="{% url 'student_list' %}" class="kpi-card blue">
+            <span class="kpi-icon"><i class="bi bi-mortarboard"></i></span>
+            <div>
+                <small>Students</small>
+                <strong>{{ context.total_students }}</strong>
+                <span>{{ context.active_students }} active, {{ context.students_without_class }} without class</span>
+            </div>
+        </a>
+        <a href="{% url 'teachers_list' %}" class="kpi-card green">
+            <span class="kpi-icon"><i class="bi bi-person-badge"></i></span>
+            <div>
+                <small>Teachers</small>
+                <strong>{{ context.total_teachers }}</strong>
+                <span>{{ context.active_teachers }} active teachers</span>
+            </div>
+        </a>
+        <a href="{% url 'class_list' %}" class="kpi-card violet">
+            <span class="kpi-icon"><i class="bi bi-building"></i></span>
+            <div>
+                <small>Classes</small>
+                <strong>{{ context.total_classes }}</strong>
+                <span>{{ context.classes_without_form_teacher }} without form teacher</span>
+            </div>
+        </a>
+        <a href="{% url 'class_list' %}" class="kpi-card amber">
+            <span class="kpi-icon"><i class="bi bi-journal-text"></i></span>
+            <div>
+                <small>Subjects</small>
+                <strong>{{ context.total_subjects }}</strong>
+                <span>{{ context.class_subjects_with_teachers }} handled assignments</span>
+            </div>
+        </a>
+        <a href="{% url 'admin_list' %}" class="kpi-card slate">
+            <span class="kpi-icon"><i class="bi bi-people"></i></span>
+            <div>
+                <small>Staff & Leadership</small>
+                <strong>{{ context.total_staff }}</strong>
+                <span>{{ context.total_parents }} parent accounts</span>
+            </div>
+        </a>
+        <a href="{% url 'results_dashboard' %}" class="kpi-card red">
+            <span class="kpi-icon"><i class="bi bi-graph-up"></i></span>
+            <div>
+                <small>Average Score</small>
+                <strong>{{ context.avg_score }}%</strong>
+                <span>{{ context.recent_results }} result entries this month</span>
+            </div>
+        </a>
+    </section>
+
+    <section class="dashboard-grid">
+        <article class="panel calendar-panel">
+            <div class="panel-header">
+                <div>
+                    <span class="eyebrow">Academic Calendar</span>
+                    <h2>Current Term</h2>
+                </div>
+                <a href="{% url 'terms_list' %}" class="panel-link">Open Calendar</a>
+            </div>
+            {% if context.current_term %}
+                <div class="term-card">
+                    <div>
+                        <h3>{{ context.current_term.name }}</h3>
+                        <p>{{ context.current_term.academic_year.name }}</p>
+                    </div>
+                    <strong>{{ context.current_term_progress }}%</strong>
+                </div>
+                <div class="term-progress">
+                    <span style="width: {{ context.current_term_progress }}%;"></span>
+                </div>
+                <dl class="term-dates">
+                    <div>
+                        <dt>Reopening</dt>
+                        <dd>{{ context.current_term.start_date|date:"M d, Y" }}</dd>
+                    </div>
+                    <div>
+                        <dt>Vacation</dt>
+                        <dd>{{ context.current_term.end_date|date:"M d, Y" }}</dd>
+                    </div>
+                    <div>
+                        <dt>Half-term</dt>
+                        <dd>
+                            {% if context.current_term.half_term_start_date %}
+                                {{ context.current_term.half_term_start_date|date:"M d" }} - {{ context.current_term.half_term_end_date|date:"M d" }}
+                            {% else %}
+                                Not set
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt>Activities</dt>
+                        <dd>{{ context.current_term.school_activities|default:"No activities added" }}</dd>
+                    </div>
+                </dl>
+            {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-calendar-plus"></i>
+                    <h3>No current term</h3>
+                    <p>Create an academic year and term calendar.</p>
+                    <a href="{% url 'create_academic_year' %}" class="btn btn-primary">Create Academic Year</a>
+                </div>
+            {% endif %}
+        </article>
+
+        <article class="panel actions-panel">
+            <div class="panel-header">
+                <div>
+                    <span class="eyebrow">Quick Actions</span>
+                    <h2>Next Tasks</h2>
+                </div>
+            </div>
+            <div class="action-list">
+                <a href="{% url 'student_create' %}"><i class="bi bi-person-plus"></i><span>Add Student</span></a>
+                <a href="{% url 'teachers_list' %}"><i class="bi bi-person-badge"></i><span>Manage Teachers</span></a>
+                <a href="{% url 'class_list' %}"><i class="bi bi-building-add"></i><span>Setup Classes & Subjects</span></a>
+                <a href="{% url 'create_admin_page' %}"><i class="bi bi-person-gear"></i><span>Add Staff/Admin</span></a>
+                <a href="{% url 'create_academic_year' %}"><i class="bi bi-calendar2-plus"></i><span>Create Academic Year</span></a>
+                <a href="{% url 'results_dashboard' %}"><i class="bi bi-file-earmark-text"></i><span>Manage Results</span></a>
+            </div>
+        </article>
+
+        <article class="panel alerts-panel">
+            <div class="panel-header">
+                <div>
+                    <span class="eyebrow">Setup Health</span>
+                    <h2>Items To Fix</h2>
+                </div>
+            </div>
+            <div class="alert-list">
+                {% for alert in context.setup_alerts %}
+                    <a href="{% url alert.url %}" class="setup-alert">
+                        <i class="bi {{ alert.icon }}"></i>
+                        <div>
+                            <strong>{{ alert.title }}</strong>
+                            <span>{{ alert.detail }}</span>
+                        </div>
+                    </a>
+                {% empty %}
+                    <div class="empty-inline">
+                        <i class="bi bi-check-circle"></i>
+                        <span>Core setup looks good.</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="panel capacity-panel">
+            <div class="panel-header">
+                <div>
+                    <span class="eyebrow">Class Capacity</span>
+                    <h2>Enrollment Load</h2>
+                </div>
+                <a href="{% url 'class_list' %}" class="panel-link">Manage Classes</a>
+            </div>
+            <div class="capacity-list">
+                {% for class in context.class_capacity %}
+                    <div class="capacity-row">
+                        <div>
+                            <strong>{{ class.name }}</strong>
+                            <span>{{ class.student_count }} of {{ class.capacity }} seats</span>
+                        </div>
+                        <div class="mini-bar">
+                            <span style="width: {% widthratio class.student_count class.capacity 100 %}%;"></span>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="empty-inline">
+                        <i class="bi bi-building"></i>
+                        <span>No class capacity data yet.</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </article>
+    </section>
+
+    <section class="dashboard-grid lower">
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <span class="eyebrow">Academic Performance</span>
+                    <h2>Top Students</h2>
+                </div>
+                <a href="{% url 'results_dashboard' %}" class="panel-link">View Results</a>
+            </div>
+            <div class="table-wrap">
+                {% if context.top_students %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Class</th>
+                                <th>Average</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in context.top_students %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ student.student__first_name }} {{ student.student__last_name }}</strong>
+                                        <span>{{ student.student__student_profile__student_id }}</span>
+                                    </td>
+                                    <td>{{ student.student__student_profile__current_class__name|default:"Not assigned" }}</td>
+                                    <td><b>{{ student.avg_score|floatformat:1 }}%</b></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="empty-inline">
+                        <i class="bi bi-graph-up"></i>
+                        <span>No results yet. Results will appear after teachers upload marks.</span>
+                    </div>
+                {% endif %}
+            </div>
+        </article>
+
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <span class="eyebrow">Teachers</span>
+                    <h2>Workload</h2>
+                </div>
+                <a href="{% url 'class_list' %}" class="panel-link">Assign Subjects</a>
+            </div>
+            <div class="workload-list">
+                {% for teacher in context.teacher_workload|slice:":6" %}
+                    <div class="workload-row">
+                        <div>
+                            <strong>{{ teacher.first_name }} {{ teacher.last_name }}</strong>
+                            <span>{{ teacher.total_subjects }} subject{{ teacher.total_subjects|pluralize }}, {{ teacher.total_classes }} class{{ teacher.total_classes|pluralize }}</span>
+                        </div>
+                        <b>{{ teacher.total_assignments }}</b>
+                    </div>
+                {% empty %}
+                    <div class="empty-inline">
+                        <i class="bi bi-person-check"></i>
+                        <span>No teacher workload yet. Assign teachers to class subjects.</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <span class="eyebrow">Subjects</span>
+                    <h2>Performance</h2>
+                </div>
+            </div>
+            <div class="subject-list">
+                {% for subject in context.subject_stats %}
+                    <div class="subject-row">
+                        <div>
+                            <strong>{{ subject.name }}</strong>
+                            <span>{{ subject.student_count }} student{{ subject.student_count|pluralize }}</span>
+                        </div>
+                        <b>{{ subject.avg_score|floatformat:1 }}%</b>
+                    </div>
+                {% empty %}
+                    <div class="empty-inline">
+                        <i class="bi bi-journal-text"></i>
+                        <span>No subject performance yet.</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <span class="eyebrow">Activity</span>
+                    <h2>Recent Updates</h2>
+                </div>
+            </div>
+            <div class="activity-list">
+                {% for activity in context.recent_activities %}
+                    <div class="activity-row">
+                        <i class="bi bi-clock-history"></i>
+                        <div>
+                            <strong>{{ activity.title }}</strong>
+                            <span>{{ activity.details }} - {{ activity.time }}</span>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="empty-inline">
+                        <i class="bi bi-clock"></i>
+                        <span>No recent activity yet.</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </article>
+    </section>
+</main>
+{% endblock content %}
+
+{% block js %}
+<script type="module" src="{% static 'scripts/JS/admin_dashboard.js' %}"></script>
+{% endblock js %}

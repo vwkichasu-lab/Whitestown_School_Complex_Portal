@@ -1,0 +1,904 @@
+{% extends context.base_template %}
+
+{% load static %}
+
+{% block title %}Result Details{% endblock %}
+
+{% block extra_css %}
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --primary: #3b82f6;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --purple: #8b5cf6;
+            --info: #06b6d4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 24px;
+        }
+
+        .top-bar {
+            background: var(--bg-card);
+            padding: 20px 28px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border);
+        }
+
+        .welcome-text h1 {
+            font-size: 1.75rem;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            font-weight: 700;
+        }
+
+        .welcome-text p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .top-bar-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 16px;
+            width: 280px;
+        }
+
+        .search-box input {
+            border: none;
+            background: none;
+            outline: none;
+            width: 100%;
+            font-size: 0.875rem;
+            margin-left: 8px;
+        }
+
+        .logout-btn {
+            position: relative;
+            cursor: pointer;
+            font-size: 1.25rem;
+            color: white;
+            background: red;
+            border: 1px solid var(--border);
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logout-btn i {
+            font-size: 20px;
+            color: #ffffff;
+        }
+
+        .logout-btn .tooltip {
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ff0000;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .logout-btn .tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px;
+            border-style: solid;
+            border-color: #ff0000 transparent transparent transparent;
+        }
+
+        .logout-btn:hover .tooltip {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .user-profile:hover {
+            background: var(--bg-main);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        /* Result Detail Styles */
+        .result-detail-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .result-card {
+            background: var(--bg-card);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid var(--border);
+        }
+
+        .result-card.full-width {
+            grid-column: span 2;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-header h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-published {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-draft {
+            background: #fef3c7;
+            color: #78350f;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .score-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 24px 0;
+            padding: 20px;
+            background: #eff6ff;
+            border-radius: 12px;
+        }
+
+        .score-item {
+            text-align: center;
+        }
+
+        .score-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .score-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .total-score {
+            font-size: 2.5rem;
+            color: var(--text-primary);
+        }
+
+        .grade-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border-radius: 12px;
+            color: white;
+            text-align: center;
+        }
+
+        .grade-letter {
+            font-size: 4rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .grade-point {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .grade-remark {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .remarks-section {
+            margin-top: 24px;
+        }
+
+        .remarks-content {
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: var(--bg-main);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .metadata {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .metadata-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 12px;
+        }
+
+        @media (max-width: 1024px) {
+            .result-detail-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .result-card.full-width {
+                grid-column: span 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+            }
+
+            .score-display {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .search-box {
+                display: none;
+            }
+
+            .top-bar {
+                flex-direction: column;
+                gap: 16px;
+            }
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            
+            .print-result, 
+            .print-result * {
+                visibility: visible;
+            }
+            
+            .print-result {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                padding: 20px;
+            }
+            
+            /* Hide action buttons in print */
+            .action-buttons,
+            .top-bar,
+            .search-box,
+            .user-profile,
+            .logout-btn {
+                display: none !important;
+            }
+            
+            /* Print-specific styling */
+            .print-header {
+                text-align: center;
+                border-bottom: 2px solid #000;
+                padding-bottom: 15px;
+                margin-bottom: 20px;
+            }
+            
+            .print-header h1 {
+                font-size: 24px;
+                margin-bottom: 5px;
+                color: #000;
+            }
+            
+            .print-header h2 {
+                font-size: 18px;
+                color: #333;
+                margin-bottom: 10px;
+            }
+            
+            .print-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+                margin-bottom: 20px;
+            }
+            
+            .print-section {
+                margin-bottom: 15px;
+                page-break-inside: avoid;
+            }
+            
+            .print-section h3 {
+                border-bottom: 1px solid #ccc;
+                padding-bottom: 5px;
+                margin-bottom: 10px;
+                font-size: 16px;
+            }
+            
+            .score-breakdown {
+                text-align: center;
+                border: 1px solid #000;
+                padding: 15px;
+                margin: 15px 0;
+            }
+            
+            .grade-display-print {
+                background: #f8f9fa;
+                border: 2px solid #000;
+                padding: 20px;
+                text-align: center;
+                margin: 15px 0;
+            }
+            
+            .official-stamp {
+                margin-top: 30px;
+                text-align: right;
+                border-top: 1px dashed #000;
+                padding-top: 10px;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="main-content">
+        <div class="top-bar">
+            <div class="welcome-text">
+                <h1>Result Details</h1>
+                <p>View detailed information about this student's result</p>
+            </div>
+            <div class="top-bar-actions">
+                <div class="user-profile">
+                    <div class="user-avatar">
+                        {{ request.user.first_name|first }}{{ request.user.last_name|first }}
+                    </div>
+                    <div>
+                        <div>{{ request.user.get_full_name }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">{{ request.user.role|title }}</div>
+                    </div>
+                </div>
+                <a href="{% url 'logout' %}" class="logout-btn">
+                    <span><i class="bi bi-box-arrow-right"></i></span>
+                    <div class="tooltip">Logout</div>
+                </a>
+            </div>
+        </div>
+
+        <div class="result-detail-container">
+            <div class="result-card">
+                <div class="card-header">
+                    <h2>Student Information</h2>
+                </div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Student Name</span>
+                        <span class="info-value">{{ context.result.student.get_full_name }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Student ID</span>
+                        <span class="info-value">{{ context.result.student.username }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Class Level</span>
+                        <span class="info-value">{{ context.result.class_level.name }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Academic Year</span>
+                        <span class="info-value">{{ context.result.term.academic_year }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="result-card">
+                <div class="card-header">
+                    <h2>Subject & Term</h2>
+                    <div class="status-badge {% if context.result.is_published %}status-published{% else %}status-draft{% endif %}">
+                        {% if context.result.is_published %}Published{% else %}Draft{% endif %}
+                    </div>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Subject</span>
+                        <span class="info-value">{{ context.result.subject.name }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Subject Code</span>
+                        <span class="info-value">{{ context.result.subject.code }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Term</span>
+                        <span class="info-value">{{ context.result.term.name }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Term Period</span>
+                        <span class="info-value">{{ context.result.term.start_date|date:"M d, Y" }} - {{ context.result.term.end_date|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="result-card full-width">
+                <div class="card-header">
+                    <h2>Score Breakdown</h2>
+                </div>
+                <div class="score-display">
+                    <div class="score-item">
+                        <div class="score-label">Class Score</div>
+                        <div class="score-value">{{ context.result.class_score }}%</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">+</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Exam Score</div>
+                        <div class="score-value">{{ context.result.exam_score }}%</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">=</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Total Score</div>
+                        <div class="total-score">{{ context.result.score }}%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="result-card">
+                <div class="grade-display">
+                    <div class="grade-letter">{{ context.result.grade }}</div>
+                    <div class="grade-point">Grade Point: {{ context.result.grade_point }}</div>
+                    <div class="grade-remark">{{ context.result.remarks|default:"Excellent Performance" }}</div>
+                </div>
+            </div>
+
+            <div class="result-card">
+                <div class="card-header">
+                    <h2>Performance Summary</h2>
+                </div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Grade</span>
+                        <span class="info-value">{{ context.result.grade }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Grade Point</span>
+                        <span class="info-value">{{ context.result.grade_point }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Calculation Method</span>
+                        <span class="info-value">
+                            {% if context.result.use_system_calculation %}
+                                System Calculated
+                            {% else %}
+                                Manual Entry
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Position in Class</span>
+                        <span class="info-value">--</span>
+                    </div>
+                </div>
+                
+                <div class="remarks-section">
+                    <div class="info-label">Teacher's Remarks</div>
+                    <div class="remarks-content">
+                        {{ context.result.remarks|default:"No remarks provided." }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="result-card full-width">
+                <div class="card-header">
+                    <h2>Actions & Information</h2>
+                </div>
+                
+                <div class="action-buttons">
+                    {% if request.user.role == 'teacher' and context.result.uploaded_by == request.user %}
+                        <button id="publish-btn" class="btn {% if context.result.is_published %}btn-secondary{% else %}btn-primary{% endif %}">
+                            {% if context.result.is_published %}Unpublish Result{% else %}Publish Result{% endif %}
+                        </button>
+                        <button d="delete-btn" class="btn btn-danger">Delete Result</button>
+                    {% endif %}
+                    <button class="btn btn-secondary" id="print-btn">Print Result</button>
+                    <button class="btn btn-secondary" onclick="history.back()">Back to Results</button>
+                </div>
+                
+                <div class="metadata">
+                    <div class="info-label">Result Metadata</div>
+                    <div class="metadata-grid">
+                        <div class="info-item">
+                            <span class="info-label">Uploaded By</span>
+                            <span class="info-value">{{ context.result.uploaded_by.get_full_name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Date Uploaded</span>
+                            <span class="info-value">{{ context.result.date_uploaded|date:"M d, Y H:i" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Last Modified</span>
+                            <span class="info-value">{{ context.result.last_modified|date:"M d, Y H:i" }}</span>
+                        </div>
+                        {% if context.result.is_published %}
+                        <div class="info-item">
+                            <span class="info-label">Published Date</span>
+                            <span class="info-value">{{ context.result.published_date|date:"M d, Y H:i" }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="print-result" style="display: none;">
+        <div class="print-header">
+            <h1>Whitestown School Complex</h1>
+            <h2>OFFICIAL RESULT SLIP</h2>
+            <p>Academic Transcript</p>
+        </div>
+        
+        <div class="print-grid">
+            <div class="print-section">
+                <h3>STUDENT INFORMATION</h3>
+                <p><strong>Name:</strong> {{ context.result.student.get_full_name }}</p>
+                <p><strong>Student ID:</strong> {{ context.result.student.username }}</p>
+                <p><strong>Class:</strong> {{ context.result.class_level.name }}</p>
+            </div>
+            
+            <div class="print-section">
+                <h3>ACADEMIC INFORMATION</h3>
+                <p><strong>Subject:</strong> {{ context.result.subject.name }}</p>
+                <p><strong>Subject Code:</strong> {{ context.result.subject.code }}</p>
+                <p><strong>Term:</strong> {{ context.result.term.name }} {{ context.result.term.academic_year }}</p>
+            </div>
+        </div>
+        
+        <div class="score-breakdown">
+            <h3>PERFORMANCE BREAKDOWN</h3>
+            <div style="display: flex; justify-content: space-around; align-items: center; margin: 15px 0;">
+                <div>
+                    <p><strong>Class Score</strong></p>
+                    <p style="font-size: 18px; font-weight: bold;">{{ context.result.class_score }}%</p>
+                </div>
+                <div style="font-size: 20px; font-weight: bold;">+</div>
+                <div>
+                    <p><strong>Exam Score</strong></p>
+                    <p style="font-size: 18px; font-weight: bold;">{{ context.result.exam_score }}%</p>
+                </div>
+                <div style="font-size: 20px; font-weight: bold;">=</div>
+                <div>
+                    <p><strong>Total Score</strong></p>
+                    <p style="font-size: 24px; font-weight: bold;">{{ context.result.score }}%</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grade-display-print">
+            <h3>FINAL GRADE</h3>
+            <div style="font-size: 48px; font-weight: bold; margin: 10px 0;">{{ context.result.grade }}</div>
+            <p style="font-size: 18px;"><strong>Grade Point:</strong> {{ context.result.grade_point }}</p>
+            <p style="font-size: 16px; font-style: italic;">{{ context.result.remarks|default:"Excellent Performance" }}</p>
+        </div>
+        
+        <div class="print-grid">
+            <div class="print-section">
+                <h3>ADDITIONAL INFORMATION</h3>
+                <p><strong>Published:</strong> {% if context.result.is_published %}Yes{% else %}No{% endif %}</p>
+                <p><strong>Published Date:</strong> {% if context.result.published_date %}{{ context.result.published_date|date:"M d, Y" }}{% else %}Not Published{% endif %}</p>
+                <p><strong>Teacher:</strong> {{ context.result.uploaded_by.get_full_name }}</p>
+            </div>
+            
+            <div class="print-section">
+                <h3>GRADING SCALE</h3>
+                <p>A+ (90-100) • A (80-89) • B+ (75-79)</p>
+                <p>B (70-74) • C+ (65-69) • C (60-64)</p>
+                <p>D+ (55-59) • D (50-54) • E (35-49) • F (0-34)</p>
+            </div>
+        </div>
+        
+        <div class="official-stamp">
+            <p><strong>Official Stamp:</strong></p>
+            <p>_________________________</p>
+            <p>Head of Academics</p>
+            <p>Whitestown School Complex</p>
+            <p>Date: ___________________</p>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script>
+
+    // Publish/Unpublish functionality
+    function togglePublishResult(resultId) {
+        if (!confirm('Are you sure you want to change the publication status of this result?')) {
+            return;
+        }
+
+        const publishBtn = document.getElementById('publish-btn');
+        const originalText = publishBtn.textContent;
+        
+        publishBtn.innerHTML = '<i>⏳</i> Processing...';
+        publishBtn.disabled = true;
+
+        fetch(`/academics/results/${resultId}/publish/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Network response was not ok');
+        })
+        .then(data => {
+            // Reload the page to reflect changes
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating publication status. Please try again.');
+            publishBtn.textContent = originalText;
+            publishBtn.disabled = false;
+        });
+    }
+
+    // Delete result functionality
+    function deleteResult(resultId) {
+        if (!confirm('Are you sure you want to delete this result? This action cannot be undone.')) {
+            return;
+        }
+
+        const deleteBtn = document.getElementById('delete-btn');
+        const originalText = deleteBtn.textContent;
+        
+        // Show loading state
+        deleteBtn.innerHTML = '<i>⏳</i> Deleting...';
+        deleteBtn.disabled = true;
+
+        fetch(`/results/${resultId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Network response was not ok');
+        })
+        .then(data => {
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting result. Please try again.');
+            deleteBtn.textContent = originalText;
+            deleteBtn.disabled = false;
+        });
+    }
+
+    // Print result functionality
+    function printResult() {
+        // Show the print version
+        const printElement = document.querySelector('.print-result');
+        printElement.style.display = 'block';
+        
+        // Print only the result content
+        window.print();
+        
+        // Hide the print version after printing
+        setTimeout(() => {
+            printElement.style.display = 'none';
+        }, 500);
+    }
+
+    // Function to get CSRF token
+    function getCSRFToken() {
+        const name = 'csrftoken';
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Add event listener when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        const publishBtn = document.getElementById('publish-btn');
+        if (publishBtn) {
+            publishBtn.addEventListener('click', function() {
+                const resultId = '{{ context.result.id }}';
+                togglePublishResult(resultId);
+            });
+        }
+
+        const deleteBtn = document.getElementById('delete-btn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', function() {
+                const resultId = '{{ context.result.id }}';
+                deleteResult(resultId);
+            });
+        }
+
+        const printBtn = document.getElementById('print-btn');
+        if (printBtn) {
+            printBtn.addEventListener('click', function() {
+                printResult();
+            });
+        }
+    });
+
+</script>
+{% endblock %}

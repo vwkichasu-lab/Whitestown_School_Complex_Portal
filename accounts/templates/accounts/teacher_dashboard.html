@@ -1,0 +1,134 @@
+{% extends "base/teacher_d.html" %}
+{% load static %}
+
+{% block title %}Teacher Dashboard{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'styles/teacher_dashboard.css' %}">
+{% endblock extra_css %}
+    
+{% block content %}
+<div class="main-content">
+
+    <div class="top-bar">
+        <div class="welcome-text">
+            <h1>Welcome, {{ teacher.user.get_full_name }} 👨‍🏫</h1>
+            <p>Here is your teaching summary and recent activity.</p>
+        </div>
+
+        <div class="top-bar-actions">
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+                <input type="text" placeholder="Search subjects, students...">
+            </div>
+
+            <div class="logout-btn">
+                <i class="bi bi-box-arrow-right"></i>
+                <span class="tooltip">Logout</span>
+            </div>
+
+            <div class="user-profile">
+                {% if teacher.user.profile_picture %}
+                    <img class="user-avatar" src="{{ teacher.user.profile_picture.url }}" alt="">
+                {% else %}
+                    <div class="user-avatar">{{ teacher.user.first_name|first }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card blue">
+            <div class="stat-header">
+                <div class="stat-icon"><i class="bi bi-journal-text"></i></div>
+            </div>
+            <div class="stat-value">{{ subjects.count }}</div>
+            <div class="stat-label">Subjects Teaching</div>
+        </div>
+
+        <div class="stat-card green">
+            <div class="stat-header">
+                <div class="stat-icon"><i class="bi bi-building"></i></div>
+            </div>
+            <div class="stat-value">{{ classes_taught.count }}</div>
+            <div class="stat-label">Classes Teaching</div>
+        </div>
+
+        <div class="stat-card yellow">
+            <div class="stat-header">
+                <div class="stat-icon"><i class="bi bi-people"></i></div>
+            </div>
+
+            <div class="stat-value">{{ total_students }}</div>
+            <div class="stat-label">Total Students</div>
+        </div>
+
+        <div class="stat-card purple">
+            <div class="stat-header">
+                <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
+            </div>
+            <div class="stat-value">{{ recent_results.count }}</div>
+            <div class="stat-label">Recent Uploads</div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+
+        <div class="card">
+            <div class="card-header">
+                <h3>📚 My Subjects</h3>
+            </div>
+            <div class="card-body">
+                {% if subjects %}
+                <div class="subjects-grid">
+                    {% for subject in subjects %}
+                    <div class="subject-card">
+                        <div class="subject-icon"><i class="bi bi-book"></i></div>
+
+                        <div class="subject-details">
+                            <h4>{{ subject.name }}</h4>
+                            <p>{{ subject.code }}</p>
+                            <span class="class-badge">{{ subject.class_level.name }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-journal-x"></i>
+                    <p>No subjects assigned yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>🕒 Recent Results Uploaded</h3>
+            </div>
+            <div class="card-body">
+                {% if recent_results %}
+                <div class="activity-list">
+                    {% for result in recent_results %}
+                    <div class="activity-item">
+                        <div class="activity-icon"><i class="bi bi-file-earmark-text"></i></div>
+                        <div class="activity-content">
+                            <strong>{{ result.subject.name }}</strong>
+                            <span>{{ result.student.user.get_full_name }} - {{ result.score }}%</span>
+                            <small>{{ result.date_uploaded|timesince }} ago</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-clock-history"></i>
+                    <p>No recent results uploaded</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

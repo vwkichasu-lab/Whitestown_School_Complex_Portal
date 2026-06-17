@@ -1,0 +1,262 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+.profile-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.profile-header {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid var(--border);
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+.profile-info h2 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.profile-info .role-badge {
+    background: var(--primary);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.profile-tabs {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+
+.tab-header {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-tertiary);
+}
+
+.tab-button {
+    padding: 16px 24px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 2px solid transparent;
+}
+
+.tab-button.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    background: var(--bg-secondary);
+}
+
+.tab-button:hover:not(.active) {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+.tab-content {
+    padding: 24px;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.form-section {
+    margin-bottom: 24px;
+}
+
+.form-section h5 {
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.readonly-field {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--text-secondary);
+}
+
+.password-strength {
+    margin-top: 8px;
+    font-size: 0.875rem;
+}
+
+.strength-weak { color: var(--error); }
+.strength-fair { color: var(--warning); }
+.strength-good { color: var(--success); }
+.strength-strong { color: var(--success); }
+
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .tab-header {
+        flex-direction: column;
+    }
+    
+    .tab-button {
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+        border-left: 2px solid transparent;
+    }
+    
+    .tab-button.active {
+        border-left-color: var(--primary);
+        border-bottom-color: var(--border);
+    }
+}
+</style>
+<link rel="stylesheet" href="{% static 'styles/profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 main-content">
+    <div class="profile-container">
+        <div class="profile-header">
+            <div class="d-flex align-items-center gap-4">
+                <div class="profile-avatar" id="profileAvatar">
+                </div>
+                <div class="profile-info">
+                    <h2 id="profileName">Loading...</h2>
+                    <div class="d-flex align-items-center gap-3 mt-2">
+                        <span class="role-badge" id="profileRole">Loading...</span>
+                        <span class="text-muted" id="profileId">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-tabs">
+            <div class="tab-header">
+                <button class="tab-button active" data-tab="personal">Personal Information</button>
+                <button class="tab-button" data-tab="profile">
+                    {% if user_role == 'teacher' %}Teacher Profile
+                    {% elif user_role == 'student' %}Student Profile
+                    {% elif user_role == 'admin' %}Admin Profile
+                    {% else %}Profile Details{% endif %}
+                </button>
+
+                <button class="tab-button" data-tab="password">Change Password</button>
+            </div>
+
+            <div class="tab-content">
+                <div class="tab-pane active" id="personalTab">
+                    <form id="personalForm">
+                        {% csrf_token %}
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">First Name *</label>
+                                <input type="text" class="form-control" name="first_name" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Last Name *</label>
+                                <input type="text" class="form-control" name="last_name" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" name="phone_number">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Date of Birth</label>
+                                <input type="date" class="form-control" name="date_of_birth">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Gender</label>
+                                <select class="form-control" name="gender">
+                                    <option value="">Select Gender</option>
+                                    <option value="M">Male</option>
+                                    <option value="F">Female</option>
+                                    <option value="O">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-footer">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="tab-pane" id="profileTab">
+                    <div id="profileDetails">
+                    </div>
+                </div>
+
+                <div class="tab-pane" id="passwordTab">
+                    <form id="passwordForm">
+                        <div class="form-section">
+                            <div class="form-group">
+                                <label class="form-label">Current Password *</label>
+                                <input type="password" class="form-control" name="current_password" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">New Password *</label>
+                                <input type="password" class="form-control" name="new_password" required 
+                                       minlength="8" id="newPassword">
+                                <div class="password-strength" id="passwordStrength"></div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Confirm New Password *</label>
+                                <input type="password" class="form-control" name="confirm_password" required>
+                            </div>
+                        </div>
+                        <div class="form-footer">
+                            <button type="submit" class="btn btn-primary">Change Password</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+    
+{% block js %}
+    <script type="module" src="{% static 'scripts/JS/profile.js' %}"></script>
+{% endblock %}

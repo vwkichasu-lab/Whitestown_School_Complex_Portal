@@ -1,0 +1,55 @@
+
+{% load static %}
+
+{% block title %}Access Denied{% endblock %}
+
+{% block content %}
+<div class="main-content" style="display:flex; justify-content:center; align-items:center; height:70vh;">
+
+    <div style="
+        max-width: 600px;
+        text-align: center;
+        padding: 40px;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        border: 1px solid #e0e6ed;
+        animation: fadeIn 0.25s ease-in-out;
+    ">
+        <div style="font-size: 60px; color: #dc3545; margin-bottom: 15px;">
+            <i class="bi bi-shield-lock"></i>
+        </div>
+
+        <h2 style="font-weight: 700; margin-bottom: 10px;">Access Restricted</h2>
+
+        <p style="font-size: 16px; color: #6c757d; line-height: 1.6;">
+            Only teachers are allowed to upload results.  
+            <br><br>
+            Please <strong>log in with a teacher account</strong> if you have one.
+        </p>
+
+        <a href="{% url 'login' %}" 
+           style="
+                display: inline-block;
+                margin-top: 20px;
+                padding: 12px 24px;
+                background: #0d6efd;
+                color: white;
+                border-radius: 8px;
+                text-decoration: none;
+                font-weight: 600;
+           ">
+            Go to Login
+        </a>
+    </div>
+
+</div>
+
+<style>
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+{% endblock content %}

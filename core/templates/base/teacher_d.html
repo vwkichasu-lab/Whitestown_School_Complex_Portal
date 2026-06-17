@@ -1,0 +1,58 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whitestown School Complex - {% block title %}{% endblock %}</title>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'styles/base/teacher_d.css' %}">
+
+    {% block extra_css %}{% endblock %}
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+    <div class="dashboard-container">
+
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2>Teacher Portal</h2>
+                <div class="school-motto">Whitestown School Complex</div>
+            </div>
+
+            <ul class="nav-links">
+
+                <div class="nav-section">Main</div>
+                <li>
+                    <a href="{% url 'teacher_dashboard' %}" class="active">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                </li>
+
+                <div class="nav-section">Teaching</div>
+                <li><a href="{% url 'manage_results' %}"><i class="bi bi-journal-text"></i> Manage Results</a></li>
+                <li><a href="{% url 'my_students' %}"><i class="bi bi-book"></i> My Students</a></li>
+                <li><a href="{% url 'my_classes' %}"><i class="bi bi-building"></i> My Classes</a></li>
+
+                <div class="nav-section">Account</div>
+                <li><a href="{% url 'profile' %}"><i class="bi bi-person-circle"></i> Profile</a></li>
+                <li><a href="{% url 'logout' %}">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a></li>
+            </ul>
+        </nav>
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    {% block js %}{% endblock %}
+
+    <script type="module" src="{% static 'scripts/JS/teacher_d.js' %}"></script>
+</script>
+</body>
+</html>

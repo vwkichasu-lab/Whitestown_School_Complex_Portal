@@ -1,0 +1,151 @@
+{% extends "base/admin_d.html" %}
+{% load static %}
+
+{% load number_format %}
+
+{% block title %}Manage Teachers for {{ subject.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'styles/pages/manage_subject_teachers.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 main-content">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="card-title">Manage Teachers for {{ subject.name }}</h4>
+                        <p class="text-muted mb-0">Assign different teachers to {{ subject.name }} for different classes</p>
+                    </div>
+
+                    <a href="{% url 'subject_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Subjects
+                    </a>
+                </div>
+                <div class="card-body">
+                    
+                    <div class="assignment-form mb-4">
+                        <h5>Add New Class Assignment</h5>
+
+                        <form id="addAssignmentForm" method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="subject_id" value="{{ subject.id }}">
+
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Class</label>
+                                        <select title="select classes name="class_level_id" class="form-control" required>
+                                            <option value="">Select Class</option>
+                                            {% for class in classes %}
+                                                <option value="{{ class.id }}">{{ class.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Academic Year</label>
+                                        <select title="select academic year" name="academic_year_id" class="form-control" required>
+                                            <option value="">Select Year</option>
+                                            {% for year in academic_years %}
+                                                <option value="{{ year.id }}">
+                                                    {{ year.name }}
+
+                                                    {% if year.is_current %}
+                                                        ( current academic year )
+                                                    {% endif %}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Teacher</label>
+
+                                        <select title="select teacher" name="teacher_id" class="form-control">
+                                            <option value="">No Teacher</option>
+                                            {% for teacher in teachers %}
+                                                <option value="{{ teacher.id }}">{{ teacher.get_full_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>&nbsp;</label>
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="bi bi-plus"></i> Add Assignment
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="assignments-list">
+                        <h5>Current Class Assignments</h5>
+                        {% if class_assignments %}
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Class</th>
+                                            <th>Academic Year</th>
+                                            <th>Teacher</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        
+                                        {% for assignment in class_assignments %}
+                                        <tr>
+                                            <td>{{ assignment.class_level.name }}</td>
+                                            <td>{{ assignment.academic_year.name }}</td>
+                                            <td>
+                                                {% if assignment.teacher %}
+                                                    {{ assignment.teacher.get_full_name }}
+                                                {% else %}
+                                                    <span class="text-muted">Not assigned</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary edit-assignment" 
+                                                        data-assignment-id="{{ assignment.id }}"
+                                                        data-class-level="{{ assignment.class_level.id }}"
+                                                        data-academic-year="{{ assignment.academic_year.id }}"
+                                                        data-teacher="{{ assignment.teacher.id|default:'' }}">
+                                                    <i class="bi bi-pencil"></i> Edit
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger delete-assignment" 
+                                                        data-assignment-id="{{ assignment.id }}">
+                                                    <i class="bi bi-trash"></i> Remove
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="bi bi-journal-x" style="font-size: 3rem; color: var(--text-secondary);"></i>
+                                <p class="text-muted mt-3">No class assignments found for this subject.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script type="module" src="{% static 'scripts/JS/manage_subject_teachers.js' %}"></script>
+{% endblock %}

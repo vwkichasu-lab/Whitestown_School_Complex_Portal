@@ -1,0 +1,195 @@
+{% extends "base/teacher_d.html" %}
+{% load static %}
+
+{% load number_format %}
+
+{% block title %}Manage Results - Teacher Portal{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'styles/pages/results_management.css' %}">
+{% endblock extra_css %}
+{% block content %}
+<div class="main-content">
+    <div class="content-header">
+        <div class="header-content">
+            <h1>📊 Results Management</h1>
+            <p>Upload and manage student results for your subjects</p>
+        </div>
+        
+        <a href="{% url 'upload_results' %}" class="btn btn-primary header-actions" data-bs-toggle="modal" data-bs-target="#uploadModal">
+            <i class="bi bi-cloud-upload"></i> Upload New Result
+        </a>
+    </div>
+
+    <div class="filters-card">
+        <h3>Filter Results</h3>
+        <form method="get" class="filters-form">
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label>Subject</label>
+                    <select title="select subject" name="subject" class="form-control">
+                        <option value="">All Subjects</option>
+                        {% for subject in subjects %}
+                            <option value="{{ subject.id }}" {% if current_filters.subject == subject.id|stringformat:"s" %}selected{% endif %}>
+                                {{ subject.name }} ({{ subject.class_level.name }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Class</label>
+                    <select title="select class" name="class_level" class="form-control">
+                        <option value="">All Classes</option>
+                        {% for class in classes_taught %}
+                        <option value="{{ class.id }}" {% if current_filters.class_level == class.id|stringformat:"s" %}selected{% endif %}>
+                            {{ class.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Term</label>
+                    <select title="select term" name="term" class="form-control">
+                        <option value="">All Terms</option>
+                        {% for term in terms %}
+                            <option value="{{ term.id }}" {% if current_filters.term == term.id|stringformat:"s" %}selected{% endif %}>
+                                {{ term.name }}
+
+                                {% if term.is_current %}
+                                    ( current Term )
+                                {% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <div class="filter-actions">
+                        <button title="filter result" type="submit" class="btn btn-primary">
+                            <i class="bi bi-funnel"></i> Apply Filters
+                        </button>
+
+                        <a href="{% url 'manage_results' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-clockwise"></i> Reset
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Uploaded Results</h3>
+            <span class="badge">{{ results.count|default_if_none:0|shortnum }} result{{ results.count|pluralize }}</span>
+        </div>
+
+        <div class="card-body">
+            {% if results %}
+               <div class="table-responsive">
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Subject</th>
+                                <th>Class</th>
+                                <th>Score</th>
+                                <th>Grade</th>
+                                <th>Term</th>
+                                <th>Date Uploaded</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="results-tbody">
+                            {% for result in results %}
+                                <tr data-result-id="{{ result.id }}">
+                                    <td>
+                                        <div class="student-info">
+                                            <div class="student-avatar-sm">
+                                                {% if result.student.profile_picture %}
+                                                    <img src="{{ result.student.profile_picture.url }}" alt="{{ result.student.get_full_name }}">
+                                                {% else %}
+                                                    <i class="bi bi-person-circle"></i>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <div class="student-details">
+                                                <strong>{{ result.student.get_full_name }}</strong>
+                                                <small>{{ result.student.student_profile.student_id }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="subject-info">
+                                            <strong>{{ result.subject.name }}</strong>
+                                            <small>{{ result.subject.code }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="class-badge">{{ result.class_level.name }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="score-display">
+                                            <span class="score-value">{{ result.score|floatformat:2 }}</span>
+                                            <small>%</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="grade-badge grade-{{ result.grade|lower|cut:'+' }}{% if '+' in result.grade %}plus{% endif %}">{{ result.grade }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="term-badge">{{ result.term.name }} {{ result.term.academic_year.name }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="upload-date">{{ result.date_uploaded|date:"M d, Y" }}</span>
+                                    </td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 2px;">
+                                            <div class="action-buttons">
+                                                <button class="btn btn-sm btn-outline-danger delete-result" 
+                                                        data-result-id="{{ result.id }}"
+                                                        title="Delete Result">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+
+                                            <div class="action-buttons">
+                                                <a href="{% url 'result_detail' result.id%}" class="btn btn-sm btn-outline-primary view-result" 
+                                                        data-result-id="{{ result.id }}"
+                                                        title="View Result">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-journal-x"></i>
+                    <h4>No Results Found</h4>
+                    <p>No results match your current filters. Upload your first result to get started.</p>
+                    <div>
+                        <a href="{% url 'upload_results' %}" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                            Upload Result
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div id="notifications"></div>
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'Scripts/JS/results_management.js' %}"></script>
+{% endblock %}

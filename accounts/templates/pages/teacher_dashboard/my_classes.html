@@ -1,0 +1,81 @@
+{% extends "base/teacher_d.html" %}
+{% load static %}
+
+{% load number_format %}
+
+{% block title %}My Classes - Teacher Portal{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'styles/pages/my_classes.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="main-content">
+        <div class="content-header">
+            <div class="header-content">
+                <h1>🏫 My Classes</h1>
+                <p>Classes you are currently teaching</p>
+            </div>
+        </div>
+
+        <div class="classes-grid">
+            {% for class_data in classes_taught %}
+                <div class="class-card">
+                    <div class="class-header">
+                        <div class="class-icon">
+                            <i class="bi bi-building"></i>
+                        </div>
+                        <div class="class-info">
+                            <h3>{{ class_data.name }}</h3>
+                            <span class="class-code">{{ class_data.code|default:class_data.name }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="class-stats">
+                        <div class="stat">
+                            <i class="bi bi-book"></i>
+                            <div>
+                                <strong>{{ class_data.subject_count|default_if_none:0|shortnum }}</strong>
+                                <span>Subject{{ class_data.subject_count|pluralize }}</span>
+                            </div>
+                        </div>
+                        <div class="stat">
+                            <i class="bi bi-people"></i>
+                            <div>
+                                <strong>{{ class_data.student_count|default_if_none:0|shortnum }}</strong>
+                                <span>Student{{ class_data.student_count|pluralize }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="class-subjects">
+                        <h4>Subjects Teaching:</h4>
+                        <div class="subjects-list">
+                            {% for subject in class_data.subjects.all %}
+                                <span class="subject-tag">{{ subject.name }}</span>
+                            {% empty %}
+                                <span class="no-subjects">No subjects assigned</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="class-actions">
+                        <a href="{% url 'my_students' %}?class={{ class_data.id }}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-people"></i> View Students
+                        </a>
+                        <a href="{% url 'manage_results' %}?class_level={{ class_data.id }}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-journal-text"></i> Manage Results
+                        </a>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="empty-state">
+                    <i class="bi bi-building-slash"></i>
+                    <h4>No Classes Assigned</h4>
+                    <p>You are not currently assigned to teach any classes.</p>
+                    <p>Please contact the administrator to get assigned to classes.</p>
+                </div>
+            {% endfor %}
+        </div>
+</div>
+{% endblock %}

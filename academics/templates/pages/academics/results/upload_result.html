@@ -1,0 +1,237 @@
+{% extends "base/teacher_d.html" %}
+{% load static %}
+
+{% block title %}Upload Results{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'styles/pages/results.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <div class="page-header">
+        <div class="header-top">
+            <div class="page-title">
+                <span class="icon"><i class="bi bi-cloud-upload"></i></span>
+                <div>
+                    <h1>Upload Results</h1>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 4px;">
+                        Upload student results for specific classes and subjects
+                    </p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'manage_results' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Results
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="upload-form">
+        <form method="POST" action="{% url 'upload_results' %}" id="uploadResultsForm">
+            {% csrf_token %}
+            
+            <div class="form-section">
+                <h4>📝 Basic Information</h4>
+                <div class="filter-grid">
+                    <div class="filter-group">
+                        <label>Academic Year *</label>
+                        <select title="select academic year" name="academic_year" class="form-control" required id="academicYearSelect">
+                            <option value="">Select Academic Year</option>
+                            {% for year in academic_years %}
+                            <option value="{{ year.id }}">
+                                {{ year.name }}
+
+                                {% if year.is_current%}
+                                    ( Current Year )
+                                  
+                                {% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Term *</label>
+                        <select title="select term" name="term" class="form-control" required id="termSelect">
+                            <option value="">Select Term</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Class Level *</label>
+                        <select title="select class" name="class_level" class="form-control" required id="classLevelSelect">
+                            <option value="">Select Class</option>
+                            {% for class in class_levels %}
+                                <option value="{{ class.id }}">{{ class.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Subject *</label>
+                        <select title="select subject" name="subject" class="form-control" required id="subjectSelect">
+                            <option value="">Select Subject</option>
+                            {% for subject in subjects %}
+                            <option value="{{ subject.id }}">{{ subject.name }} ({{ subject.code }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h4>🎓 Student Results</h4>
+                    <div class="header-actions">
+                        <div class="form-check" style="display: inline-block; margin-right: 12px;">
+                            <input type="checkbox" name="is_published" id="isPublished" class="form-check-input">
+                            <label for="isPublished" class="form-check-label">Publish immediately</label>
+                        </div>
+                        <button type="button" class="btn btn-outline" id="loadStudentsBtn" disabled>
+                            <i class="bi bi-arrow-clockwise"></i> Load Students
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="studentsContainer">
+                    <div class="empty-state">
+                        <i class="bi bi-people"></i>
+                        <h4>No Students Loaded</h4>
+                        <p>Select a class and subject to load students</p>
+                    </div>
+                </div>
+
+                <div id="resultsDataContainer" style="display: none;"></div>
+            </div>
+
+            <div class="form-section">
+                <div style="display: flex; gap: 12px; justify-content: flex-end; padding-top: 16px; border-top: 1px solid var(--border);">
+                    <button type="button" class="btn btn-secondary" onclick="window.history.back()">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+                        <i class="bi bi-cloud-upload"></i> Upload Results
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</main>
+
+<div id="studentResultModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalStudentName">Enter Student Results</h3>
+            <button title="close model" type="button" class="btn-close cls_stu_m" data-bs-dismiss="modal">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+
+        <div class="calculation-mode-section" style="margin-bottom: 16px; padding: 12px; background: var(--bg-secondary); border-radius: 8px;">
+            <label style="font-weight: 600; margin-bottom: 8px; display: block;">Calculation Mode:</label>
+            <div class="radio-group" style="display: flex; gap: 16px;">
+                <label class="radio-label">
+                    <input type="radio" name="calculation_mode" value="system" checked>
+                    <span class="radio-custom"></span>
+                    System 
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="calculation_mode" value="manual">
+                    <span class="radio-custom"></span>
+                    Manual
+                </label>
+            </div>
+        </div>
+
+        <div class="modal-body">
+            <form id="studentResultForm">
+                <input type="hidden" id="modalStudentId" name="student_id">
+                
+                <div class="student-info-card" style="background: var(--bg-secondary); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                    <div class="student-details">
+                        <div><strong>Student ID:</strong> <span id="modalStudentIdDisplay">-</span></div>
+                        <div><strong>Class:</strong> <span id="modalStudentClass">-</span></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="modalClassScore">Class Score (30%) *</label>
+                            <input type="number" class="form-control" id="modalClassScore" name="class_score" 
+                                   min="0" max="100" step="0.1" placeholder="0-100" required>
+                            <small class="form-text">Continuous assessment score</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="modalExamScore">Exam Score (70%) *</label>
+                            <input type="number" class="form-control" id="modalExamScore" name="exam_score" 
+                                   min="0" max="100" step="0.1" placeholder="0-100" required>
+                            <small class="form-text">Final examination score</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="systemScoreInputs">
+                    <div class="form-group">
+                        <label for="modalTotalScore">Total Score (Calculated)</label>
+                        <input type="number" class="form-control" id="modalTotalScore" name="total_score" 
+                               readonly style="background: var(--bg-secondary);">
+                    </div>
+                </div>
+
+                <div id="manualScoreInputs" style="display: none;">
+                    <div class="form-group">
+                        <label for="modalManualScore">Total Score *</label>
+                        <input type="number" class="form-control" id="modalManualScore" name="manual_score" 
+                               min="0" max="100" step="0.1" placeholder="0-100">
+                        <small class="form-text">Enter the total score directly</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="modalRemarks">Remarks (Optional)</label>
+                    <textarea class="form-control" id="modalRemarks" name="remarks" 
+                              placeholder="Enter any remarks about this student's performance..." 
+                              rows="3" maxlength="200"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary cls_stu_m" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="saveStudentResultBtn">
+                <i class="bi bi-check-circle"></i> Save Results
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="loadingModal" class="confirmation-modal" style="display: none;">
+    <div class="confirmation-content">
+        <div class="confirmation-icon">
+            <i class="bi bi-hourglass-split text-primary"></i>
+        </div>
+        <h3 class="confirmation-title">Uploading Results</h3>
+        <p class="confirmation-message" id="loadingMessage">
+            Please wait while we process your results...
+        </p>
+        <div class="loading-spinner" style="margin: 0 auto;"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+    <script type="module" src="{% static 'scripts/JS/upload_result.js' %}"></script>
+{% endblock %}

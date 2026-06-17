@@ -1,0 +1,109 @@
+{% extends 'base/admin_d.html' %}
+{% load static %}
+
+{% block title %}Create Term{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'styles/pages/create_term.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 main-content">
+    <div class="row">
+        <div class="col-12">
+            <div class="card term-form">
+                <div class="card-header">
+                    <h4 class="card-title">Create New Term</h4>
+                    <p class="card-subtitle">Create a new academic term within an academic year</p>
+                </div>
+                <div class="card-body">
+                    <form id="createTermForm" method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="form-section">
+                            <h5 class="form-section-title">Basic Information</h5>
+                            
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="academic_year">Academic Year *</label>
+                                    <select class="form-control" id="academic_year" name="academic_year" required>
+                                        <option value="">Select Academic Year</option>
+                                        {% for year in academic_years %}
+                                        <option value="{{ year.id }}" 
+                                                data-start="{{ year.start_date|date:'Y-m-d' }}"
+                                                data-end="{{ year.end_date|date:'Y-m-d' }}">
+                                            {{ year.name }} 
+                                            {% if year.is_current %}
+                                                (Current Year)
+                                            {% endif %}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="name">Term Name *</label>
+                                    <select class="form-control" id="name" name="name" required>
+                                        <option value="">Select Term</option>
+                                        <option value="1st Term">First Term</option>
+                                        <option value="2nd Term">Second Term</option>
+                                        <option value="3rd Term">Third Term</option>
+                                    </select>
+                                    <small class="form-text">Select the term name</small>
+                                </div>
+                            </div>
+
+                            <div class="date-input-group">
+                                <div class="form-group">
+                                    <label for="start_date">Start Date *</label>
+                                    <input type="date" class="form-control" id="start_date" name="start_date" required>
+                                    <small class="form-text" id="start_date_help"></small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="end_date">End Date *</label>
+                                    <input type="date" class="form-control" id="end_date" name="end_date" required>
+                                    <small class="form-text" id="end_date_help"></small>
+                                </div>
+                            </div>
+                            
+                            <div class="date-range-info" id="dateRangeInfo" style="display: none;">
+                                <i class="bi bi-info-circle"></i>
+                                <span id="dateRangeText"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h5 class="form-section-title">Term Settings</h5>
+                            
+                            <div class="checkbox-container" id="currentTermContainer">
+                                <input type="checkbox" class="form-check-input" id="is_current" name="is_current">
+                                <label class="form-check-label" for="is_current">
+                                    Set as current term
+                                </label>
+                            </div>
+                            <small class="form-text">
+                                If checked, this will become the current term and any previous current term will be unset.
+                            </small>
+                        </div>
+
+                        <div class="form-actions" style="margin-top: 32px;">
+                            <a href="{% url 'terms_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i>
+                                Back to Terms
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-plus-circle"></i>
+                                Create Term
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+    <script type="module" src="{% static 'Scripts/JS/create_term.js' %}"></script>
+{% endblock %}

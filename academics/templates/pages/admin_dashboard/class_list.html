@@ -1,0 +1,198 @@
+{% extends "base/admin_d.html" %}
+{% load static %}
+{% load number_format %}
+
+{% block title %}Classes & Subjects{% endblock title %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'styles/pages/teachers.css' %}">
+<link rel="stylesheet" href="{% static 'styles/pages/classes.css' %}">
+{% endblock extra_css %}
+
+{% block content %}
+<main class="main-content">
+    <div class="setup-hero">
+        <div>
+            <span class="eyebrow">Academic Setup</span>
+            <h1>Classes, Subjects & Teachers</h1>
+            <p>Set up the Ghana school structure from one admin dashboard page: divisions, class streams, subjects, form teachers, and subject teachers.</p>
+        </div>
+        <button type="button" class="btn btn-primary" id="openClassModal">
+            <i class="bi bi-plus-lg"></i> Add Class / Stream
+        </button>
+    </div>
+
+    <div class="setup-summary">
+        <div class="summary-card blue">
+            <span>Total Classes</span>
+            <strong>{{ context.total_classes|default_if_none:0|shortnum }}</strong>
+        </div>
+        <div class="summary-card green">
+            <span>Active Classes</span>
+            <strong>{{ context.active_classes|default_if_none:0|shortnum }}</strong>
+        </div>
+        <div class="summary-card amber">
+            <span>Total Students</span>
+            <strong>{{ context.total_students|default_if_none:0|shortnum }}</strong>
+        </div>
+        <div class="summary-card violet">
+            <span>Total Subjects</span>
+            <strong>{{ context.total_subjects|default_if_none:0|shortnum }}</strong>
+        </div>
+    </div>
+
+    <div class="setup-toolbar">
+        <form method="get" class="setup-search">
+            <label for="search">Search</label>
+            <input id="search" type="text" name="search" class="form-control" placeholder="Search class, code, division, teacher..." value="{{ context.search|default:'' }}">
+            <button type="submit" class="btn btn-secondary"><i class="bi bi-search"></i> Search</button>
+        </form>
+    </div>
+
+    <div class="class-board">
+        {% for class in context.page_obj %}
+        <article class="class-card" data-class-id="{{ class.id }}">
+            <div class="class-card-top">
+                <div class="class-badge">{{ class.code|default:"CLS" }}</div>
+                <div>
+                    <h2>{{ class.name }}</h2>
+                    <p>{{ class.division_name|default:"General" }}</p>
+                </div>
+            </div>
+
+            <div class="class-metrics">
+                <div>
+                    <span>Students</span>
+                    <strong>{{ class.current_students_count }} / {{ class.capacity }}</strong>
+                </div>
+                <div>
+                    <span>Subjects</span>
+                    <strong>{{ class.subjects.count }}</strong>
+                </div>
+            </div>
+
+            <div class="handler-block">
+                <span>Form Teacher</span>
+                <strong>{{ class.form_teacher.get_full_name|default:"Not assigned" }}</strong>
+            </div>
+
+            <div class="subject-preview">
+                <span>Subjects Offered</span>
+                <div>
+                    {% for subject in class.subjects.all|slice:":6" %}
+                        <b>{{ subject.code }}</b>
+                    {% empty %}
+                        <small>No subjects assigned</small>
+                    {% endfor %}
+                    {% if class.subjects.count > 6 %}
+                        <small>+{{ class.subjects.count|add:"-6" }} more</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="class-actions">
+                <button type="button" class="btn btn-secondary btn-sm view-btn" data-class-id="{{ class.id }}">
+                    <i class="bi bi-eye"></i> View
+                </button>
+                <button type="button" class="btn btn-primary btn-sm edit-btn" data-class-id="{{ class.id }}">
+                    <i class="bi bi-pencil-square"></i> Edit
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm assign-teacher-btn" data-class-id="{{ class.id }}">
+                    <i class="bi bi-person-check"></i> Form Teacher
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm manage-subjects-btn" data-class-id="{{ class.id }}">
+                    <i class="bi bi-journal-check"></i> Subjects
+                </button>
+            </div>
+        </article>
+        {% empty %}
+        <div class="empty-setup">
+            <i class="bi bi-building-add"></i>
+            <h2>No classes yet</h2>
+            <p>Add your first class stream, for example Primary - Basic 1 A or JHS - JHS 1 A.</p>
+            <button type="button" class="btn btn-primary" id="openEmptyClassModal">
+                <i class="bi bi-plus-lg"></i> Add First Class
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+</main>
+
+<div id="classModal" class="modal">
+    <div class="modal-content academic-modal">
+        <div class="modal-header">
+            <h2><i class="bi bi-building-add"></i> Add Class / Stream</h2>
+            <button class="modal-close closeModal" type="button"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <form id="classForm" data-url="{% url 'class_create' %}" data-csrf="{{ csrf_token }}">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>School Division *</label>
+                    <select name="division_name" id="divisionName" class="form-control" required>
+                        <option value="">Select division</option>
+                        <option value="Early Years">Early Years</option>
+                        <option value="Kindergarten">Kindergarten</option>
+                        <option value="Primary">Primary</option>
+                        <option value="Junior High School">Junior High School</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Class Level *</label>
+                    <input list="classLevelList" name="class_level" id="classLevel" class="form-control" placeholder="Basic 1, JHS 1..." required>
+                    <datalist id="classLevelList">
+                        {% for level in context.ges_class_levels %}
+                            <option value="{{ level.name }}"></option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <div class="form-group">
+                    <label>Stream / Arm *</label>
+                    <input type="text" name="stream" id="classStream" class="form-control" value="A" required>
+                </div>
+                <div class="form-group">
+                    <label>Class Code *</label>
+                    <input type="text" name="code" id="classCode" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Capacity</label>
+                    <input type="number" name="capacity" class="form-control" value="30" min="1" max="120">
+                </div>
+                <div class="form-group">
+                    <label>Form Teacher</label>
+                    <select name="form_teacher" class="form-control">
+                        <option value="">Assign later</option>
+                        {% for teacher in context.teachers %}
+                            <option value="{{ teacher.id }}">{{ teacher.get_full_name }} - {{ teacher.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group full-width">
+                    <label>Description</label>
+                    <textarea name="description" class="form-control" rows="3" placeholder="Optional notes about this class"></textarea>
+                </div>
+                <div class="form-group full-width">
+                    <label>Subjects Offered</label>
+                    <div class="subject-check-grid">
+                        {% for subject in context.subjects %}
+                        <label>
+                            <input type="checkbox" name="subjects" value="{{ subject.id }}">
+                            <span>{{ subject.name }}</span>
+                            <small>{{ subject.code }}</small>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary closeModal">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save Class</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content %}
+
+{% block js %}
+<script type="module" src="{% static 'scripts/JS/classes.js' %}"></script>
+{% endblock js %}

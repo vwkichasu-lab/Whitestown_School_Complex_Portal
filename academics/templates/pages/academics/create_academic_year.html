@@ -1,0 +1,222 @@
+{% extends 'base/admin_d.html' %}
+{% load static %}
+
+{% block title %}Create Academic Year{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'styles/pages/create_academic_year.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 main-content">
+    <div class="row">
+        <div class="col-12">
+            <div class="card academic-year-form">
+                <div class="card-header">
+                    <h4 class="card-title">Create New Academic Year</h4>
+                </div>
+                <div class="card-body">
+                    <form id="createAcademicYearForm" method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="form-section">
+                            <h5 class="form-section-title">Basic Information</h5>
+                            
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="name">Academic Year Name *</label>
+                                    <input type="text" class="form-control" id="name" name="name" 
+                                           placeholder="e.g., 2025/2026" required>
+                                    <small class="form-text">Format: YYYY/YYYY. GES basic-school dates will be generated automatically.</small>
+                                </div>
+                            </div>
+
+                            <div class="date-input-group">
+                                <div class="form-group">
+                                    <label for="start_date">Start Date *</label>
+                                    <input type="date" class="form-control" id="start_date" name="start_date">
+                                </div>
+                                <div class="form-group">
+                                    <label for="end_date">End Date *</label>
+                                    <input type="date" class="form-control" id="end_date" name="end_date">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h5 class="form-section-title">Settings</h5>
+                            
+                            <div class="checkbox-container" id="currentYearContainer">
+                                <input type="checkbox" class="form-check-input" id="is_current" name="is_current">
+                                <label class="form-check-label" for="is_current">
+                                    Set as current academic year
+                                </label>
+                            </div>
+                            <small class="form-text">
+                                If checked, this will become the current academic year and any previous current year will be unset.
+                            </small>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 32px;">
+
+                            <a href="{% url 'academic_years_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i>
+                                Back to Academic Year
+                            </a>
+
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-plus-circle"></i>
+                                Create Academic Year
+                            </button>
+                        </div>
+                        
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+// import showToast from "/static/scripts/JS/admin_d.js"
+
+document.getElementById('currentYearContainer').addEventListener('click', function(e) {
+    if (e.target.type !== 'checkbox') {
+        const checkbox = this.querySelector('input[type="checkbox"]');
+        checkbox.checked = !checkbox.checked;
+        this.classList.toggle('checked', checkbox.checked);
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const checkbox = document.getElementById('is_current');
+    const container = document.getElementById('currentYearContainer');
+    container.classList.toggle('checked', checkbox.checked);
+});
+
+document.getElementById('createAcademicYearForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    try {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Creating...';
+        this.classList.add('loading');
+        
+        const response = await fetch('{% url "create_academic_year" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Success case
+            if (typeof showToast === 'function') {
+                showToast(data.message, 'success');
+            } else {
+                alert('Success: ' + data.message);
+            }
+            
+            submitBtn.classList.add('success-pulse');
+            
+            setTimeout(() => {
+                {% if request.GET.next %}
+                    window.location.href = '{{ request.GET.next }}';
+                {% else %}
+                    window.location.href = '{% url "academic_years_list" %}';
+                {% endif %}
+            }, 1500);
+            
+        } else {
+            // Error case from server
+            const errorMessage = data.error || 'Failed to create academic year';
+            if (typeof showToast === 'function') {
+                showToast(errorMessage, 'error');
+            } else {
+                alert('Error: ' + errorMessage);
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error creating academic year:', error);
+        const errorMessage = 'Network error occurred. Please check your connection and try again.';
+        
+        if (typeof showToast === 'function') {
+            showToast(errorMessage, 'error');
+        } else {
+            alert('Error: ' + errorMessage);
+        }
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        this.classList.remove('loading');
+        submitBtn.classList.remove('success-pulse');
+    }
+});
+
+// Date validation
+const today = new Date().toISOString().split('T')[0];
+
+function applyGesDatesFromName() {
+    const nameField = document.getElementById('name');
+    const match = nameField.value.match(/(\d{4})\D+(\d{2,4})/);
+    if (!match) return;
+
+    const startYear = Number(match[1]);
+    document.getElementById('start_date').value = `${startYear}-09-02`;
+    document.getElementById('end_date').value = `${startYear + 1}-07-23`;
+}
+
+document.getElementById('name').addEventListener('input', applyGesDatesFromName);
+
+document.getElementById('start_date').addEventListener('change', function() {
+    const endDateField = document.getElementById('end_date');
+    
+    // Only set minimum end date if start date is selected
+    if (this.value) {
+        endDateField.min = this.value;
+    }
+    
+    // Auto-generate name if empty
+    const nameField = document.getElementById('name');
+    if (!nameField.value && this.value) {
+        const startYear = new Date(this.value).getFullYear();
+        const endYear = startYear + 1;
+        nameField.value = `${startYear}-${endYear}`;
+    }
+});
+
+document.getElementById('end_date').addEventListener('change', function() {
+    const startDate = document.getElementById('start_date').value;
+    const endDate = this.value;
+    
+    if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        
+        if (end <= start) {
+            if (typeof showToast === 'function') {
+                showToast('End date must be after start date', 'error');
+            } else {
+                alert('Error: End date must be after start date');
+            }
+            this.value = '';
+        }
+    }
+});
+</script>
+{% endblock %}

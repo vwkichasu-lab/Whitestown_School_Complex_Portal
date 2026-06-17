@@ -1,0 +1,280 @@
+    {% extends "base/admin_d.html" %}
+
+    {% load static %}
+
+    {% load number_format %}
+
+    {% block title %}
+        Students 
+    {% endblock title %}
+
+    {% block extra_css %}
+      <link rel="stylesheet" href="{% static 'styles/pages/teachers.css' %}">
+      <link rel="stylesheet" href="{% static 'styles/pages/students.css' %}">
+    {% endblock extra_css %}
+
+    {% block content %}
+
+        <main class="main-content">
+            <div class="page-header">
+                <div class="header-top">
+                    <div class="page-title">
+                        <span class="icon"><i class="bi bi-mortarboard"></i></span>
+                        <div>
+                            <h1>Students</h1>
+                            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 4px;">Manage all students</p>
+                        </div>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" id="openModal">
+                            <i class="bi bi-plus-lg"></i> Add Student
+                        </button>
+                    </div>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <div class="stat-value">{{ context.total_students|default_if_none:0|shortnum }}</div>
+                        <div class="stat-label">Total Students</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">{{ context.active_students|default_if_none:0|shortnum }}</div>
+                        <div class="stat-label">Active</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">{{ context.inactive_students|default_if_none:0|shortnum }}</div>
+                        <div class="stat-label">Inactive</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">{{ context.classes.count|default_if_none:0|shortnum }}</div>
+                        <div class="stat-label">Classes</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filters-bar">
+                <form method="get">
+                    <div class="filters-grid">
+                        <div class="filter-group">
+                            <label><i class="bi bi-search"></i> Search</label>
+                            <input type="text" name="search" class="form-control" placeholder="Search by name or ID..." value="{{ context.search|default:'' }}">
+                        </div>
+                        <div class="filter-group">
+                            <label><i class="bi bi-building"></i> Class</label>
+                            <select name="class" class="form-control">
+                                <option value="">All Classes</option>
+                                {% for class in context.classes %}
+                                    <option value="{{ class.id }}" {% if context.class_id == class.id|stringformat:"s" %}selected{% endif %}>{{ class.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label><i class="bi bi-bar-chart-line"></i> Status</label>
+                            <select title="select status" name="status" class="form-control">
+                                <option value="">All Status</option>
+                                <option value="active" {% if context.status == 'active' %}selected{% endif %}>Active</option>
+                                <option value="inactive" {% if context.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>&nbsp;</label>
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                <i class="bi bi-funnel"></i> Filter
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="students-grid">
+                {% for student in context.page_obj %}
+                    <div class="student-card">
+                        <div class="student-header">
+                            {% if student.user.profile_picture %}
+                                <img class="student-avatar" src="{{ student.user.profile_picture.url }}" alt="{{ student.user.get_full_name }}">
+                            {% else %}
+                                <div class="student-avatar" style="background: var(--primary);">
+                                    {{ student.user.first_name|first }}{{ student.user.last_name|first }}
+                                </div>
+                            {% endif %}
+                            
+                            <div class="student-name">{{ student.user.get_full_name }}</div>
+                            <div class="student-id">{{ student.student_id }}</div>
+                        </div>
+                        <div class="student-body">
+                            <div class="info-row">
+                                <div class="info-icon" style="background: #d1fae5; color: var(--secondary);">
+                                    <i class="bi bi-building"></i>
+                                </div>
+                                <div class="info-content">
+                                    <div class="info-label">Class</div>
+                                    <div class="info-value">{{ student.current_class.name|default:"Not assigned" }}</div>
+                                </div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-icon" style="background: #dbeafe; color: var(--primary);">
+                                    <i class="bi bi-envelope"></i>
+                                </div>
+                                <div class="info-content">
+                                    <div class="info-label">Parent Email</div>
+                                    <div class="info-value">{{ student.parent_email }}</div>
+                                </div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-icon" style="background: #ede9fe; color: var(--purple);">
+                                    <i class="bi bi-telephone"></i>
+                                </div>
+                                <div class="info-content">
+                                    <div class="info-label">Parent Phone</div>
+                                    <div class="info-value">{{ student.parent_phone|default:"Not provided" }}</div>
+                                </div>
+                            </div>
+                            <div class="status-tags">
+                                <span class="status-tag {% if student.is_active %}active{% else %}inactive{% endif %}">
+                                    {% if student.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="student-footer">
+                            <button class="btn btn-secondary btn-sm view-btn" data-student-id="{{ student.user.id }}">
+                                <i class="bi bi-eye"></i> View
+                            </button>
+                            <button class="btn btn-primary btn-sm edit-btn" data-student-id="{{ student.user.id }}">
+                                <i class="bi bi-pencil-square"></i> Edit
+                            </button>
+                            <div class="dropdown">
+                                <button class="btn btn-actions btn-sm dropdown-toggle" type="button">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <div class="dropdown-menu">
+                                    <button class="dropdown-item change-password-btn" data-student-id="{{ student.user.id }}">
+                                        <i class="bi bi-key"></i> Change Password
+                                    </button>
+                                    <div class="dropdown-divider"></div>
+                                    <button class="dropdown-item delete-btn text-danger" data-student-id="{{ student.user.id }}">
+                                        <i class="bi bi-trash"></i> Delete Student
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="no-students">
+                        <i class="bi bi-person-x" style="font-size: 3rem; color: var(--text-secondary);"></i>
+                        <h3>No students found</h3>
+                        <p>No students match your current filters.</p>
+                    </div>
+                {% endfor %}
+            </div>
+
+            {% if context.page_obj.paginator.num_pages > 1 %}
+                <div class="pagination">
+                    {% if context.page_obj.has_previous %}
+                        <a href="?page=1{% if context.search %}&search={{ context.search }}{% endif %}{% if context.class_id %}&class={{ context.class_id }}{% endif %}{% if context.status %}&status={{ context.status }}{% endif %}" class="page-btn">
+                            <i class="bi bi-arrow-left"></i> First
+                        </a>
+                        <a href="?page={{ context.page_obj.previous_page_number }}{% if context.search %}&search={{ context.search }}{% endif %}{% if context.class_id %}&class={{ context.class_id }}{% endif %}{% if context.status %}&status={{ context.status }}{% endif %}" class="page-btn">
+                            <i class="bi bi-arrow-left"></i> Previous
+                        </a>
+                    {% else %}
+                        <span class="page-btn disabled"><i class="bi bi-arrow-left"></i> First</span>
+                        <span class="page-btn disabled"><i class="bi bi-arrow-left"></i> Previous</span>
+                    {% endif %}
+
+                    {% for num in context.page_obj.paginator.page_range %}
+                        {% if context.page_obj.number == num %}
+                            <span class="page-btn active">{{ num }}</span>
+                        {% else %}
+                            <a href="?page={{ num }}{% if context.search %}&search={{ context.search }}{% endif %}{% if context.class_id %}&class={{ context.class_id }}{% endif %}{% if context.status %}&status={{ context.status }}{% endif %}" class="page-btn">{{ num }}</a>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if context.page_obj.has_next %}
+                        <a href="?page={{ context.page_obj.next_page_number }}{% if context.search %}&search={{ context.search }}{% endif %}{% if context.class_id %}&class={{ context.class_id }}{% endif %}{% if context.status %}&status={{ context.status }}{% endif %}" class="page-btn">
+                            Next <i class="bi bi-arrow-right"></i>
+                        </a>
+                        <a href="?page={{ context.page_obj.paginator.num_pages }}{% if context.search %}&search={{ context.search }}{% endif %}{% if context.class_id %}&class={{ context.class_id }}{% endif %}{% if context.status %}&status={{ context.status }}{% endif %}" class="page-btn">
+                            Last <i class="bi bi-arrow-right"></i>
+                        </a>
+                    {% else %}
+                        <span class="page-btn disabled">Next <i class="bi bi-arrow-right"></i></span>
+                        <span class="page-btn disabled">Last <i class="bi bi-arrow-right"></i></span>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </main>
+
+        <div id="studentModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>➕ Add New Student</h2>
+                    <button class="modal-close closeModal">✕</button>
+                </div>
+                <form id="studentForm" data-url="{% url 'student_create' %}" data-csrf="{{ csrf_token }}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" name="first_name" class="form-control" placeholder="Enter first name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" name="last_name" class="form-control" placeholder="Enter last name" required>
+                    </div>
+                    <!-- <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" name="email" class="form-control" placeholder="student@whitestownschool.edu" required>
+                    </div> -->
+                    <!-- <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" name="phone_number" class="form-control" placeholder="+233 XX XXX XXXX">
+                    </div> -->
+                    <div class="form-group">
+                        <label>Date of Birth</label>
+                        <input title="select student date of birth" type="date" name="date_of_birth" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <select title="selct gender" name="gender" class="form-control">
+                            <option value="">Select gender...</option>
+                            <option value="M">Male</option>
+                            <option value="F">Female</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Profile Picture</label>
+                        <input title="select profile for student" type="file" name="profile_picture" class="form-control" accept="image/*">
+                    </div>
+                    <div class="form-group">
+                        <label>Class</label>
+                        <select title="select class" name="current_class" class="form-control" required>
+                            <option value="">Select class...</option>
+                            {% for class in context.classes %}
+                                <option value="{{ class.id }}">{{ class.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Parent Full Name</label>
+                        <input type="text" name="parent_full_name" class="form-control" placeholder="Enter parent's full name">
+                    </div>
+                    <div class="form-group">
+                        <label>Parent Phone</label>
+                        <input type="tel" name="parent_phone" class="form-control" placeholder="+233 XX XXX XXXX">
+                    </div>
+                    <div class="form-group">
+                        <label>Parent Email</label>
+                        <input type="email" name="parent_email" class="form-control" placeholder="parent@email.com">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary closeModal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Student</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    {% endblock content %}
+
+    {% block js %}
+        <script type="module" src="{% static 'scripts/JS/students.js' %}"></script>
+    {% endblock js %}

@@ -1,0 +1,336 @@
+{% extends "base/admin_d.html" %}
+{% load static %}
+
+{% block title %}Admin Staff Management{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'styles/pages/admin_list.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <div class="page-header">
+        <div class="header-top">
+            <div class="page-title">
+                <span class="icon"><i class="bi bi-people"></i></span>
+                <div>
+                    <h1>Admin Staff Management</h1>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 4px;">
+                        Manage administrative staff members and their profiles
+                    </p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'create_admin_page' %}" class="btn btn-primary">
+                    <i class="bi bi-person-plus"></i> Add New Admin
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #dbeafe;">
+                <i class="bi bi-people" style="color: #3b82f6;"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ total_admins }}</div>
+                <div class="stat-label">Total Admins</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #d1fae5;">
+                <i class="bi bi-person-check" style="color: #10b981;"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ active_admins }}</div>
+                <div class="stat-label">Active Admins</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #fef3c7;">
+                <i class="bi bi-person-gear" style="color: #f59e0b;"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ administrative_count }}</div>
+                <div class="stat-label">Administrative</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #ede9fe;">
+                <i class="bi bi-person-workspace" style="color: #8b5cf6;"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ other_count }}</div>
+                <div class="stat-label">Other Staff</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="filters-card">
+        <div class="filters-header">
+            <h3>🔍 Filter Admins</h3>
+            <div class="filters-actions">
+                <button class="btn btn-outline" id="clearFilters">
+                    <i class="bi bi-arrow-clockwise"></i> Clear Filters
+                </button>
+            </div>
+        </div>
+        <form method="get" class="filters-form">
+            {% csrf_token %}
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label>Staff Type</label>
+                    <select title="select type" name="staff_type" class="form-control">
+                        <option value="">All Types</option>
+                        <option value="administrative" {% if current_filters.staff_type == 'administrative' %}selected{% endif %}>Administrative</option>
+                        <option value="other" {% if current_filters.staff_type == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select title="select status" name="is_active" class="form-control">
+                        <option value="">All Status</option>
+                        <option value="true" {% if current_filters.is_active == 'true' %}selected{% endif %}>Active</option>
+                        <option value="false" {% if current_filters.is_active == 'false' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Search</label>
+                    <div class="search-box">
+                        <i class="bi bi-search"></i>
+                        <input type="text" name="search" placeholder="Search by name, email, or staff ID..." 
+                               value="{{ current_filters.search }}">
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel"></i> Apply Filters
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>📋 Admin Staff List</h3>
+            <div class="card-actions">
+                <div class="table-info">
+                    Showing {{ admins|length }} of {{ total_admins }} admins
+                </div>
+                <div class="export-actions">
+                    <button class="btn btn-outline" id="exportBtn">
+                        <i class="bi bi-download"></i> Export
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            {% if admins %}
+            <div class="table-responsive">
+                <table class="admins-table">
+                    <thead>
+                        <tr>
+                            <th>
+                                <div class="table-header-cell">
+                                    <span>Admin Info</span>
+                                </div>
+                            </th>
+                            <th>
+                                <div class="table-header-cell">
+                                    <span>Staff Details</span>
+                                </div>
+                            </th>
+                            <th>
+                                <div class="table-header-cell">
+                                    <span>Contact</span>
+                                </div>
+                            </th>
+                            <th>
+                                <div class="table-header-cell">
+                                    <span>Status</span>
+                                </div>
+                            </th>
+                            <th>
+                                <div class="table-header-cell">
+                                    <span>Actions</span>
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for admin in admins %}
+                        <tr>
+                            <td>
+                                <div class="user-info">
+                                    <div class="user-avatar">
+                                        {% if admin.user.profile_picture %}
+                                            <img src="{{ admin.user.profile_picture.url }}" alt="{{ admin.user.get_full_name }}">
+                                        {% else %}
+                                            <div class="avatar-placeholder">
+                                                {{ admin.user.first_name|first }}{{ admin.user.last_name|first }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="user-details">
+                                        <div class="user-name">{{ admin.user.get_full_name }}</div>
+                                        <div class="user-email">{{ admin.user.email }}</div>
+                                        <div class="user-username">@{{ admin.user.username }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="staff-details">
+                                    <div class="detail-item">
+                                        <span class="detail-label">Staff ID:</span>
+                                        <span class="detail-value">{{ admin.staff_id }}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Type:</span>
+                                        <span class="staff-type-badge {{ admin.staff_type }}">
+                                            {{ admin.get_staff_type_display }}
+                                        </span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Joined:</span>
+                                        <span class="detail-value">{{ admin.user.date_joined|date:"M d, Y" }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="contact-info">
+                                    {% if admin.user.phone_number %}
+                                    <div class="contact-item">
+                                        <i class="bi bi-telephone"></i>
+                                        <span>{{ admin.user.phone_number }}</span>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if admin.user.emergency_contact_name %}
+                                        <div class="contact-item">
+                                            <i class="bi bi-person-plus"></i>
+                                            <span>{{ admin.user.emergency_contact_name }}</span>
+                                        </div>
+                                    {% endif %}
+                                    {% if not admin.user.phone_number and not admin.user.emergency_contact_name %}
+                                        <span class="text-muted">No contact info</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="status-info">
+                                    <div class="status-badge {% if admin.user.is_active %}active{% else %}inactive{% endif %}">
+                                        {% if admin.user.is_active %}
+                                            <i class="bi bi-check-circle"></i> Active
+                                        {% else %}
+                                            <i class="bi bi-x-circle"></i> Inactive
+                                        {% endif %}
+                                    </div>
+                                    {% if admin.user.last_login %}
+                                        <div class="last-login">
+                                            Last login: {{ admin.user.last_login|date:"M d, Y" }}
+                                        </div>
+                                    {% else %}
+                                        <div class="last-login never">
+                                            Never logged in
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    {% if admin.user.id != request.user.id %}
+                                        <button class="dropdown-item change-password-btn" data-admin-id="{{ admin.user.id }}">
+                                            <i class="bi bi-key"></i> Change Password
+                                        </button>
+
+                                        <button class="btn btn-sm btn-outline-danger toggle-admin-status {% if not admin.user.is_active %}d-none{% endif %}" 
+                                                data-admin-id="{{ admin.id }}"
+                                                id="deactivateBtn-{{ admin.id }}">
+                                            <i class="bi bi-person-dash"></i> Deactivate
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-success toggle-admin-status {% if admin.user.is_active %}d-none{% endif %}" 
+                                                data-admin-id="{{ admin.id }}"
+                                                id="activateBtn-{{ admin.id }}">
+                                            <i class="bi bi-person-check"></i> Activate
+                                        </button>
+                                        {% else %}
+                                        <span class="text-muted small">Current User</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if admins.has_other_pages %}
+                <div class="pagination">
+                    <div class="pagination-info">
+                        Page {{ admins.number }} of {{ admins.paginator.num_pages }}
+                    </div>
+                    <div class="pagination-controls">
+                        {% if admins.has_previous %}
+                        <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                        class="pagination-btn">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                        <a href="?page={{ admins.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                        class="pagination-btn">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                        {% endif %}
+
+                        {% for num in admins.paginator.page_range %}
+                            {% if admins.number == num %}
+                            <span class="pagination-btn active">{{ num }}</span>
+                            {% elif num > admins.number|add:'-3' and num < admins.number|add:'3' %}
+                            <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                            class="pagination-btn">{{ num }}</a>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if admins.has_next %}
+                        <a href="?page={{ admins.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                        class="pagination-btn">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                        <a href="?page={{ admins.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                        class="pagination-btn">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="bi bi-people" style="font-size: 4rem; color: var(--text-secondary);"></i>
+                    </div>
+                    <h3>No Admin Staff Found</h3>
+                    <p>No administrative staff members match your current filters.</p>
+                    <a href="{% url 'create_admin_page' %}" class="btn btn-primary">
+                        <i class="bi bi-person-plus"></i> Add First Admin
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block js %}
+<script type="module" src="{% static 'scripts/JS/admin_list.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whitestown School Complex || Contact Academics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e5e5e5;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            height: 70px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: #1a56db;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #666;
+            font-weight: 500;
+            font-size: 15px;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: #1a56db;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #1a56db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1e4bbb;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #1a56db;
+            border: 1.5px solid #1a56db;
+        }
+
+        .btn-outline:hover {
+            background: #1a56db;
+            color: white;
+        }
+        
+        .tagline {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .contact-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .contact-info {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .contact-form {
+            flex: 2;
+            min-width: 300px;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        h2 {
+            color: #1a5fb4;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e6e9f0;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+        
+        .info-icon {
+            background: #1a5fb4;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: #1a5fb4;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(26, 95, 180, 0.2);
+        }
+        
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        .btn {
+            background: #1a5fb4;
+            color: white;
+            border: none;
+            padding: 14px 25px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-weight: 600;
+        }
+        
+        .btn:hover {
+            background: #164b9c;
+        }
+        
+        .required {
+            color: #e01b24;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            color: #666;
+            border-top: 1px solid #e6e9f0;
+        }
+        
+        @media (max-width: 768px) {
+            .contact-container {
+                flex-direction: column;
+            }
+            
+            .contact-info, .contact-form {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav class="nav">
+                <a href="/" class="logo">
+                    <div class="logo-icon">WSC</div>
+                    <div class="logo-text">Whitestown School Complex</div>
+                </a>
+                <div class="nav-links">
+                    <a href="#about">About</a>
+                    <a href="/contact">Contact</a>
+                    {% if user.is_authenticated %}
+                        {% if user.role == 'admin' %}
+                            <a style="color: white;" href="{% url 'admin_dashboard' %}" class="btn btn-primary">
+                                <i class="bi bi-speedometer2"></i> Admin Dashboard
+                            </a>
+                        {% elif user.role == 'teacher' %}
+                            <a style="color: white;" href="{% url 'teacher_dashboard' %}" class="btn btn-primary">
+                                <i class="bi bi-speedometer2"></i> Teacher Dashboard
+                            </a>
+                        {% elif user.role == 'student' %}
+                            <a style="color: white;" href="{% url 'student_dashboard' %}" class="btn btn-primary">
+                                <i class="bi bi-speedometer2"></i> Student Dashboard
+                            </a>
+                        {% else %}
+                            <a style="color: white;" href="{% url 'dashboard' %}" class="btn btn-primary">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <a style="color: white;" href="{% url 'login' %}" class="btn btn-outline">
+                            <i class="bi bi-person-circle"></i> Login
+                        </a>
+                    {% endif %}
+                </div>
+            </nav
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="contact-container">
+            <div class="contact-info">
+                <h2>Get In Touch</h2>
+                <div class="info-item">
+                    <div class="info-icon">📧</div>
+                    <div>
+                        <h3>Email</h3>
+                        <p>academics@newstartacademy.edu</p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">📞</div>
+                    <div>
+                        <h3>Phone</h3>
+                        <p>+1 (555) 123-4567</p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">🕒</div>
+                    <div>
+                        <h3>Response Time</h3>
+                        <p>We typically respond within 24-48 hours during business days.</p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">💡</div>
+                    <div>
+                        <h3>Before Contacting</h3>
+                        <p>Please check our <a href="#" style="color: #1a5fb4;">FAQ section</a> for quick answers to common questions.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="contact-form">
+                <h2>Contact Form</h2>
+                <form id="contactForm">
+                    <div class="form-group">
+                        <label for="studentId">Student ID <span class="required">*</span></label>
+                        <input type="text" id="studentId" name="studentId" required placeholder="Enter your student ID">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="subject">Subject <span class="required">*</span></label>
+                        <input type="text" id="subject" name="subject" required placeholder="Brief description of your issue">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="problemType">Problem Type <span class="required">*</span></label>
+                        <select id="problemType" name="problemType" required>
+                            <option value="" disabled selected>Select the type of problem</option>
+                            <option value="login">Login Issues</option>
+                            <option value="password">Password Reset</option>
+                            <option value="grades">Grade Display Issues</option>
+                            <option value="assignment">Assignment Submission Problems</option>
+                            <option value="technical">Technical Glitches</option>
+                            <option value="other">Other Issues</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="message">Detailed Message <span class="required">*</span></label>
+                        <textarea id="message" name="message" required placeholder="Please provide detailed information about the problem you're experiencing..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn">Submit Request</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 Whitestown School Complex. All rights reserved.</p>
+        </div>
+    </footer>
+    
+    <script>
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const studentId = document.getElementById('studentId').value;
+            const subject = document.getElementById('subject').value;
+            const problemType = document.getElementById('problemType').value;
+            const message = document.getElementById('message').value;
+            
+            // In a real application, you would send this data to a server
+            // For this example, we'll just show an alert
+            alert(`Thank you for your submission!\n\nWe have received your request regarding "${subject}" and will respond to ${email} shortly.`);
+            
+            // Reset the form
+            document.getElementById('contactForm').reset();
+        });
+    </script>
+</body>
+</html>

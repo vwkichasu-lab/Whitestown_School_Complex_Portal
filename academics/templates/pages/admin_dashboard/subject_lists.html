@@ -1,0 +1,259 @@
+{% extends "base/admin_d.html" %}
+
+{% load static %}
+
+{% load number_format %}
+
+{% block title %}
+    Subjects
+{% endblock title %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'styles/pages/teachers.css' %}">
+  <link rel="stylesheet" href="{% static 'styles/pages/subjects.css' %}">
+{% endblock extra_css %}
+
+{% block content %}
+    <main class="main-content">
+        <div class="page-header">
+            <div class="header-top">
+                <div class="page-title">
+                    <span class="icon"><i class="bi bi-journal-text"></i></span>
+                    <div>
+                        <h1>Subjects</h1>
+                        <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 4px;">Manage all academic subjects</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-primary" id="openSubjectModal">
+                        <i class="bi bi-plus-lg"></i> Add Subject
+                    </button>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="stat-value">{{ context.total_subjects|default_if_none:0|shortnum }}</div>
+                    <div class="stat-label">Total Subjects</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">{{ context.core_subjects|default_if_none:0|shortnum }}</div>
+                    <div class="stat-label">Core Subjects</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">{{ context.elective_subjects|default_if_none:0|shortnum }}</div>
+                    <div class="stat-label">Elective Subjects</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">{{ context.active_subjects|default_if_none:0|shortnum }}</div>
+                    <div class="stat-label">Active Subjects</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filters-bar">
+            <form method="get">
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label><i class="bi bi-search"></i> Search</label>
+                        <input type="text" name="search" class="form-control" placeholder="Search by name or code..." value="{{ context.search|default:'' }}">
+                    </div>
+                    <div class="filter-group">
+                        <label><i class="bi bi-tags"></i> Category</label>
+                        <select title="select category" name="category" class="form-control">
+                            <option value="">All Categories</option>
+                            {% for key, label in context.categories %}
+                                <option value="{{ key }}" {% if context.category == key %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label><i class="bi bi-bar-chart-line"></i> Status</label>
+                        <select title="select status" name="is_active" class="form-control">
+                            <option value="">All Status</option>
+                            <option value="true" {% if context.is_active == 'true' %}selected{% endif %}>Active</option>
+                            <option value="false" {% if context.is_active == 'false' %}selected{% endif %}>Inactive</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>&nbsp;</label>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            <i class="bi bi-funnel"></i> Filter
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="subjects-grid">
+            {% for subject in context.page_obj %}
+                <div class="subject-card">
+                    <div class="subject-header">
+                        <div class="subject-icon" style="background: {% if subject.category == 'core' %}var(--primary){% else %}var(--secondary){% endif %};">
+                            <i class="bi bi-journal-text"></i>
+                        </div>
+                        <div class="subject-name">{{ subject.name }}</div>
+                        <div class="subject-code">{{ subject.code }}</div>
+                    </div>
+                    <div class="subject-body">
+                        <div class="info-row">
+                            <div class="info-icon" style="background: #d1fae5; color: var(--secondary);">
+                                <i class="bi bi-tags"></i>
+                            </div>
+                            <div class="info-content">
+                                <div class="info-label">Category</div>
+                                <div class="info-value">{{ subject.get_category_display }}</div>
+                            </div>
+                        </div>
+                        <!-- <div class="info-row">
+                            <div class="info-icon" style="background: #dbeafe; color: var(--primary);">
+                                <i class="bi bi-person"></i>
+                            </div>
+                            <div class="info-content">
+                                <div class="info-label">Teacher</div>
+                                <div class="info-value">
+                                    {% with assignments=ssubject.classsubject_set.all %}
+                                        {% if assignments.count %}
+                                            {{ assignments.count }} teacher{{ assignments.count|pluralize }}
+                                        {% else %}
+                                            No teachers assigned
+                                        {% endif %}
+                                    {% endwith %}
+                                </div>
+                            </div>
+                        </div> -->
+                        <div class="info-row">
+                            <div class="info-icon" style="background: #ede9fe; color: var(--purple);">
+                                <i class="bi bi-building"></i>
+                            </div>
+                            <div class="info-content">
+                                <div class="info-label">Classes</div>
+                                <div class="info-value">{{ subject.class_levels.count }} Classes</div>
+                            </div>
+                        </div>
+
+                        {% if subject.description %}
+                            <div class="description">
+                                {{ subject.description|truncatewords:20 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="subject-footer">
+                        <button class="btn btn-secondary btn-sm view-btn" data-subject-id="{{ subject.id }}">
+                            <i class="bi bi-eye"></i> View
+                        </button>
+                        <button class="btn btn-primary btn-sm edit-btn" data-subject-id="{{ subject.id }}">
+                            <i class="bi bi-pencil-square"></i> Edit
+                        </button>
+                        <div class="dropdown">
+                            <button title="more options" class="btn btn-actions btn-sm dropdown-toggle" type="button">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+
+                            <div class="dropdown-menu">
+                                <button type="button" class="dropdown-item assign-teacher-btn" data-subject-id="{{ subject.id }}">
+                                    <i class="bi bi-person-plus"></i> Assign Teacher
+                                </button>
+                                <div class="dropdown-divider"></div>
+
+                                <button type="button" class="dropdown-item delete-btn text-danger" data-subject-id="{{ subject.id }}">
+                                    <i class="bi bi-trash"></i> Delete Subject
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="no-subjects">
+                    <i class="bi bi-journal-x" style="font-size: 3rem; color: var(--text-secondary);"></i>
+                    <h3>No subjects found</h3>
+                    <p>No subjects match your current filters.</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if context.page_obj.paginator.num_pages > 1 %}
+        <div class="pagination">
+            {% if context.page_obj.has_previous %}
+                <a href="?page=1{% if context.search %}&search={{ context.search }}{% endif %}{% if context.category %}&category={{ context.category }}{% endif %}{% if context.is_active %}&is_active={{ context.is_active }}{% endif %}" class="page-btn">
+                    <i class="bi bi-arrow-left"></i> First
+                </a>
+                <a href="?page={{ context.page_obj.previous_page_number }}{% if context.search %}&search={{ context.search }}{% endif %}{% if context.category %}&category={{ context.category }}{% endif %}{% if context.is_active %}&is_active={{ context.is_active }}{% endif %}" class="page-btn">
+                    <i class="bi bi-arrow-left"></i> Previous
+                </a>
+            {% else %}
+                <span class="page-btn disabled"><i class="bi bi-arrow-left"></i> First</span>
+                <span class="page-btn disabled"><i class="bi bi-arrow-left"></i> Previous</span>
+            {% endif %}
+
+            {% for num in context.page_obj.paginator.page_range %}
+                {% if context.page_obj.number == num %}
+                    <span class="page-btn active">{{ num }}</span>
+                {% else %}
+                    <a href="?page={{ num }}{% if context.search %}&search={{ context.search }}{% endif %}{% if context.category %}&category={{ context.category }}{% endif %}{% if context.is_active %}&is_active={{ context.is_active }}{% endif %}" class="page-btn">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if context.page_obj.has_next %}
+                <a href="?page={{ context.page_obj.next_page_number }}{% if context.search %}&search={{ context.search }}{% endif %}{% if context.category %}&category={{ context.category }}{% endif %}{% if context.is_active %}&is_active={{ context.is_active }}{% endif %}" class="page-btn">
+                    Next <i class="bi bi-arrow-right"></i>
+                </a>
+                <a href="?page={{ context.page_obj.paginator.num_pages }}{% if context.search %}&search={{ context.search }}{% endif %}{% if context.category %}&category={{ context.category }}{% endif %}{% if context.is_active %}&is_active={{ context.is_active }}{% endif %}" class="page-btn">
+                    Last <i class="bi bi-arrow-right"></i>
+                </a>
+            {% else %}
+                <span class="page-btn disabled">Next <i class="bi bi-arrow-right"></i></span>
+                <span class="page-btn disabled">Last <i class="bi bi-arrow-right"></i></span>
+            {% endif %}
+        </div>
+        {% endif %}
+    </main>
+
+    <div id="subjectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>➕ Add New Subject</h2>
+                <button class="modal-close closeModal">✕</button>
+            </div>
+            <form id="subjectForm" data-url="{% url 'subject_create' %}" data-csrf="{{ csrf_token }}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Subject Name *</label>
+                    <input type="text" name="name" class="form-control" placeholder="Enter subject name" required>
+                </div>
+                <div class="form-group">
+                    <label>Subject Code *</label>
+                    <input type="text" name="code" class="form-control" placeholder="e.g., MATH001" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" class="form-control" placeholder="Enter subject description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select name="category" class="form-control">
+                        {% for key, label in context.categories %}
+                            <option value="{{ key }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" name="is_active" checked>
+                        <span>Active Subject</span>
+                    </label>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary closeModal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Subject</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock content %}
+
+{% block js %}
+    <script type="module" src="{% static 'scripts/JS/subjects.js' %}"></script>
+{% endblock js %}
