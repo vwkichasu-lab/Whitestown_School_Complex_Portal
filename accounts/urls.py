@@ -44,6 +44,7 @@ urlpatterns = [
 
         #Student
     path('dashboard/student/', views.student_dashboard, name='student_dashboard'),
+    path('dashboard/parent/', views.parent_dashboard, name='parent_dashboard'),
     
     # User actions
     path('users/<uuid:user_id>/reset-password/', views.reset_password, name='reset_password'),

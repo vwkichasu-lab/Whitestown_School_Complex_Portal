@@ -1314,7 +1314,7 @@ def student_dashboard(request):
     # Base queryset for results
     results = Result.objects.filter(
         student=request.user,
-        is_published=False
+        is_published=True
     ).select_related('subject', 'class_level', 'term', 'term__academic_year')
     
     # Apply filters
@@ -1381,6 +1381,81 @@ def student_dashboard(request):
     }
     
     return render(request, 'accounts/student_dashboard.html', context)
+
+
+@login_required
+def parent_dashboard(request):
+    """Parent dashboard showing linked children, classes, teachers, results, and calendar."""
+    if request.user.role != 'parent':
+        return redirect_to_dashboard(request.user)
+
+    parent_profile = ParentProfile.objects.filter(user=request.user).first()
+    linked_students = StudentProfile.objects.none()
+
+    if parent_profile:
+        linked_students = parent_profile.students.select_related(
+            'user',
+            'current_class',
+            'current_stream',
+            'current_class__form_teacher',
+        ).prefetch_related('current_class__classsubject_set__subject', 'current_class__classsubject_set__teacher')
+
+    if not linked_students.exists() and request.user.email:
+        linked_students = StudentProfile.objects.filter(
+            parent_email__iexact=request.user.email
+        ).select_related(
+            'user',
+            'current_class',
+            'current_stream',
+            'current_class__form_teacher',
+        ).prefetch_related('current_class__classsubject_set__subject', 'current_class__classsubject_set__teacher')
+
+    student_users = [student.user for student in linked_students]
+    published_results = Result.objects.filter(
+        student__in=student_users,
+        is_published=True,
+    ).select_related('student', 'subject', 'class_level', 'term', 'term__academic_year').order_by('-date_uploaded')
+
+    children = []
+    for student in linked_students:
+        student_results = [result for result in published_results if result.student_id == student.user_id]
+        average_score = 0
+        if student_results:
+            scores = [float(result.score or 0) for result in student_results]
+            average_score = round(sum(scores) / len(scores), 1)
+
+        class_subjects = []
+        if student.current_class:
+            class_subjects = list(
+                ClassSubject.objects.filter(class_level=student.current_class)
+                .select_related('subject', 'teacher')
+                .order_by('subject__name')
+            )
+
+        children.append({
+            'profile': student,
+            'results': student_results[:6],
+            'results_count': len(student_results),
+            'average_score': average_score,
+            'best_result': max(student_results, key=lambda result: result.score or 0) if student_results else None,
+            'class_subjects': class_subjects,
+        })
+
+    current_term = Term.objects.filter(is_current=True).select_related('academic_year').first()
+    if not current_term:
+        today = timezone.now().date()
+        current_term = Term.objects.filter(start_date__lte=today, end_date__gte=today).select_related('academic_year').first()
+
+    context = {
+        'parent_profile': parent_profile,
+        'children': children,
+        'children_count': len(children),
+        'published_results_count': published_results.count(),
+        'current_term': current_term,
+        'current_academic_year': AcademicYear.objects.filter(is_current=True).first(),
+    }
+
+    return render(request, 'accounts/parent_dashboard.html', context)
 
 
 

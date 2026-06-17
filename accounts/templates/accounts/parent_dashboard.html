@@ -1,0 +1,167 @@
+{% extends "base/student_d.html" %}
+{% load static %}
+
+{% block title %}Parent Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'styles/parent_dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="parent-shell">
+    <section class="parent-hero">
+        <div>
+            <span class="eyebrow">Parent Portal</span>
+            <h1>Welcome, {{ user.first_name|default:user.username }}</h1>
+            <p>Track your linked children, classes, teachers, academic progress, and the current school term.</p>
+        </div>
+        <div class="hero-card">
+            <strong>{{ children_count }}</strong>
+            <span>Linked child{{ children_count|pluralize:"ren" }}</span>
+        </div>
+    </section>
+
+    <section class="parent-stats">
+        <article>
+            <i class="bi bi-mortarboard"></i>
+            <div>
+                <strong>{{ children_count }}</strong>
+                <span>Children</span>
+            </div>
+        </article>
+        <article>
+            <i class="bi bi-journal-check"></i>
+            <div>
+                <strong>{{ published_results_count }}</strong>
+                <span>Published results</span>
+            </div>
+        </article>
+        <article>
+            <i class="bi bi-calendar2-week"></i>
+            <div>
+                <strong>{{ current_academic_year.name|default:"Not set" }}</strong>
+                <span>Academic year</span>
+            </div>
+        </article>
+        <article>
+            <i class="bi bi-calendar-event"></i>
+            <div>
+                <strong>{{ current_term.name|default:"No term" }}</strong>
+                <span>Current term</span>
+            </div>
+        </article>
+    </section>
+
+    {% if current_term %}
+    <section class="term-panel">
+        <div>
+            <span class="eyebrow">Academic Calendar</span>
+            <h2>{{ current_term.name }} - {{ current_term.academic_year.name }}</h2>
+            <p>{{ current_term.start_date|date:"M d, Y" }} to {{ current_term.end_date|date:"M d, Y" }}</p>
+        </div>
+        <dl>
+            <div>
+                <dt>Vacation</dt>
+                <dd>{{ current_term.vacation_start_date|default:current_term.end_date|date:"M d, Y" }}</dd>
+            </div>
+            <div>
+                <dt>Half-term</dt>
+                <dd>
+                    {% if current_term.half_term_start_date %}
+                        {{ current_term.half_term_start_date|date:"M d" }} - {{ current_term.half_term_end_date|date:"M d" }}
+                    {% else %}
+                        Not set
+                    {% endif %}
+                </dd>
+            </div>
+            <div>
+                <dt>Activities</dt>
+                <dd>{{ current_term.school_activities|default:"No activities added" }}</dd>
+            </div>
+        </dl>
+    </section>
+    {% endif %}
+
+    <section class="children-grid">
+        {% for child in children %}
+        <article class="child-card">
+            <div class="child-top">
+                <div class="avatar">
+                    {% if child.profile.user.profile_picture %}
+                        <img src="{{ child.profile.user.profile_picture.url }}" alt="{{ child.profile.user.get_full_name }}">
+                    {% else %}
+                        <i class="bi bi-person-circle"></i>
+                    {% endif %}
+                </div>
+                <div>
+                    <h2>{{ child.profile.user.get_full_name|default:child.profile.user.username }}</h2>
+                    <p>{{ child.profile.student_id }}</p>
+                </div>
+                <strong class="score-pill">{{ child.average_score|floatformat:1 }}%</strong>
+            </div>
+
+            <div class="child-meta">
+                <div>
+                    <span>Class</span>
+                    <strong>{{ child.profile.current_class.name|default:"Not assigned" }}</strong>
+                </div>
+                <div>
+                    <span>Stream</span>
+                    <strong>{{ child.profile.current_stream.name|default:"-" }}</strong>
+                </div>
+                <div>
+                    <span>Form Teacher</span>
+                    <strong>{{ child.profile.current_class.form_teacher.get_full_name|default:"Not assigned" }}</strong>
+                </div>
+                <div>
+                    <span>Results</span>
+                    <strong>{{ child.results_count }}</strong>
+                </div>
+            </div>
+
+            <div class="card-section">
+                <div class="section-title">
+                    <h3>Subject Teachers</h3>
+                    <span>{{ child.class_subjects|length }} subject{{ child.class_subjects|length|pluralize }}</span>
+                </div>
+                <div class="subject-list">
+                    {% for item in child.class_subjects|slice:":8" %}
+                        <div>
+                            <strong>{{ item.subject.name }}</strong>
+                            <span>{{ item.teacher.get_full_name|default:"Teacher not assigned" }}</span>
+                        </div>
+                    {% empty %}
+                        <p>No subject teachers assigned yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card-section">
+                <div class="section-title">
+                    <h3>Recent Results</h3>
+                    {% if child.best_result %}
+                        <span>Best: {{ child.best_result.subject.code }} {{ child.best_result.score|floatformat:0 }}%</span>
+                    {% endif %}
+                </div>
+                <div class="results-list">
+                    {% for result in child.results %}
+                        <div>
+                            <span>{{ result.subject.name }}</span>
+                            <strong>{{ result.score|floatformat:1 }}% {{ result.grade }}</strong>
+                        </div>
+                    {% empty %}
+                        <p>No published results yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </article>
+        {% empty %}
+        <article class="empty-parent">
+            <i class="bi bi-link-45deg"></i>
+            <h2>No linked children yet</h2>
+            <p>Ask the school administrator to link this parent account to the student profile, or make sure the parent email on the student record matches this account.</p>
+        </article>
+        {% endfor %}
+    </section>
+</main>
+{% endblock %}

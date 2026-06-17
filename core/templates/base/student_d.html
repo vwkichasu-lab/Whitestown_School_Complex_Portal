@@ -20,7 +20,7 @@
                 <span>Student Portal</span>
             </div>
             <div class="header-actions">
-                <a class="btn btn-outline btn-sm" href="{% url 'student_dashboard' %}">
+                <a class="btn btn-outline btn-sm" href="{% if user.role == 'parent' %}{% url 'parent_dashboard' %}{% else %}{% url 'student_dashboard' %}{% endif %}">
                     Home
                 </a>
                 <a href="{% url 'logout' %}" class="btn btn-outline btn-sm">

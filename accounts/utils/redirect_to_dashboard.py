@@ -9,7 +9,7 @@ def redirect_to_dashboard(user):
     elif user.role == 'student':
         return redirect('student_dashboard')
     elif user.role == 'parent':
-        return redirect('profile')
+        return redirect('parent_dashboard')
     else:
         # Fallback for unknown roles
         return redirect('home')
