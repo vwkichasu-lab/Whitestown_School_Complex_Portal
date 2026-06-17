@@ -152,16 +152,23 @@
                                     <i class="bi bi-people"></i>
                                 </div>
                                 <div class="info-content">
-                                    <div class="info-label">Subjects</div>
-                                    <div class="info-value">{{ teacher.subjects.all.count }} Subjects</div>
+                                    <div class="info-label">Assigned Workload</div>
+                                    <div class="info-value">{{ teacher.assigned_subject_count }} Subject{{ teacher.assigned_subject_count|pluralize }} / {{ teacher.assigned_class_count }} Class{{ teacher.assigned_class_count|pluralize }}</div>
                                 </div>
                             </div>
                             <div class="subjects-tags">
                                 {% if teacher.highest_qualification %}
                                     <span class="subject-tag">{{ teacher.highest_qualification }}</span>
                                 {% endif %}
-                                {% for subject in teacher.subjects.all %}
+                                {% for subject in teacher.assigned_subjects_display %}
                                     <span class="subject-tag">{{ subject.name }}</span>
+                                {% empty %}
+                                    <span class="subject-tag muted">No assigned subjects</span>
+                                {% endfor %}
+                            </div>
+                            <div class="subjects-tags class-tags">
+                                {% for class in teacher.assigned_classes_display %}
+                                    <span class="subject-tag class-tag">{{ class.name }}</span>
                                 {% endfor %}
                             </div>
 

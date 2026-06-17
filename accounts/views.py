@@ -365,6 +365,28 @@ def teacher_list(request):
     paginator = Paginator(teachers, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+
+    teacher_users = [teacher.user for teacher in page_obj]
+    assignments = ClassSubject.objects.filter(
+        teacher__in=teacher_users
+    ).select_related('subject', 'class_level', 'academic_year').order_by(
+        'subject__name', 'class_level__name'
+    )
+    assignment_map = {}
+    for assignment in assignments:
+        assignment_map.setdefault(assignment.teacher_id, []).append(assignment)
+
+    for teacher in page_obj:
+        assigned_items = assignment_map.get(teacher.user_id, [])
+        unique_subjects = {}
+        unique_classes = {}
+        for assignment in assigned_items:
+            unique_subjects[str(assignment.subject_id)] = assignment.subject
+            unique_classes[str(assignment.class_level_id)] = assignment.class_level
+        teacher.assigned_subjects_display = list(unique_subjects.values())
+        teacher.assigned_classes_display = list(unique_classes.values())
+        teacher.assigned_subject_count = len(unique_subjects)
+        teacher.assigned_class_count = len(unique_classes)
     
     context = {
         'page_obj': page_obj,
@@ -598,6 +620,9 @@ def get_user_data(request, user_id):
         
         if user.role == 'teacher' and hasattr(user, 'teacher_profile'):
             teacher_profile = user.teacher_profile
+            assigned_subjects = ClassSubject.objects.filter(
+                teacher=user
+            ).select_related('subject', 'class_level', 'academic_year')
             data.update({
                 'employee_id': teacher_profile.employee_id,
                 'employment_type': teacher_profile.employment_type,
@@ -611,6 +636,16 @@ def get_user_data(request, user_id):
                 'is_active': teacher_profile.is_active,
                 'notes': teacher_profile.notes,
                 'subjects': list(teacher_profile.subjects.values_list('id', flat=True)),
+                'assigned_subjects': [
+                    {
+                        'subject_id': str(assignment.subject_id),
+                        'subject_name': assignment.subject.name,
+                        'subject_code': assignment.subject.code,
+                        'class_name': assignment.class_level.name,
+                        'academic_year': assignment.academic_year.name if assignment.academic_year else '',
+                    }
+                    for assignment in assigned_subjects
+                ],
             })
         
         elif user.role == 'student' and hasattr(user, 'student_profile'):

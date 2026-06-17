@@ -293,6 +293,23 @@
     transform: translateY(-1px);
     border-color: transparent;
 }
+
+.subject-tag.muted {
+    color: var(--text-secondary);
+    background: #f8fafc;
+    border-style: dashed;
+}
+
+.class-tags {
+    margin-top: 10px;
+    padding-top: 10px;
+}
+
+.class-tag {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+}
 .teacher-footer {
     padding: 20px 24px;
     background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);

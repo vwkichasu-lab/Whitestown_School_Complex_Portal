@@ -298,6 +298,14 @@ function showViewModal(teacherData) {
                                 ${teacherData.is_active ? 'Active' : 'Inactive'}
                             </span>
                         </div>
+                        <div class="info-item full-width">
+                            <label>Assigned Subjects and Classes</label>
+                            <span>${
+                                (teacherData.assigned_subjects || []).length
+                                    ? teacherData.assigned_subjects.map(item => `${item.subject_name} (${item.class_name})`).join(', ')
+                                    : 'No assigned subjects yet'
+                            }</span>
+                        </div>
                     </div>
                 </div>
             </div>
