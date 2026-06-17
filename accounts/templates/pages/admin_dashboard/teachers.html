@@ -18,13 +18,13 @@
                     <div class="page-title">
                         <span class="icon"><i class="bi bi-person-badge"></i></span>
                         <div>
-                            <h1>Teachers</h1>
-                            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 4px;">Manage all teaching staff</p>
+                            <h1>Lecturers & Teaching Staff</h1>
+                            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 4px;">Enroll and manage classroom teachers, subject teachers, and class teachers.</p>
                         </div>
                     </div>
                     <div class="header-actions">
                         <button class="btn btn-primary" id="openModal">
-                            <i class="bi bi-plus-lg"></i> Add Teacher
+                            <i class="bi bi-plus-lg"></i> Add Lecturer
                         </button>
                     </div>
                 </div>
@@ -32,7 +32,7 @@
                 <div class="stats-row">
                     <div class="stat-box">
                         <div class="stat-value">{{ context.total_teachers|default:0 }}</div>
-                        <div class="stat-label">Total Teachers</div>
+                        <div class="stat-label">Teaching Staff</div>
                     </div>
                     <div class="stat-box">
                         <div class="stat-value">{{ context.full_time_teachers|default:0 }}</div>
@@ -58,7 +58,7 @@
                         </div>
                         <div class="filter-group">
                             <label><i class="bi bi-briefcase"></i> Employment Type</label>
-                            <select title="select employment type name="employment_type" class="form-control">
+                            <select title="Select employment type" name="employment_type" class="form-control">
                                 <option value="">All Types</option>
                                 {% for key, label in context.employment_types %}
                                     <option value="{{ key }}" {% if context.emp_type == key %}selected{% endif %}>{{ label }}</option>
@@ -107,7 +107,17 @@
                                 </div>
                                 <div class="info-content">
                                     <div class="info-label">Employment</div>
-                                    <div class="info-value">{{ teacher.get_employment_type_display }}</div>
+                                    <div class="info-value">{{ teacher.get_employment_type_display }}{% if teacher.job_title %} - {{ teacher.job_title }}{% endif %}</div>
+                                </div>
+                            </div>
+
+                            <div class="info-row">
+                                <div class="info-icon" style="background: #fef3c7; color: #b45309;">
+                                    <i class="bi bi-layers"></i>
+                                </div>
+                                <div class="info-content">
+                                    <div class="info-label">Level / Department</div>
+                                    <div class="info-value">{{ teacher.get_teaching_level_display }}{% if teacher.department %} - {{ teacher.department }}{% endif %}</div>
                                 </div>
                             </div>
 
@@ -147,6 +157,9 @@
                                 </div>
                             </div>
                             <div class="subjects-tags">
+                                {% if teacher.highest_qualification %}
+                                    <span class="subject-tag">{{ teacher.highest_qualification }}</span>
+                                {% endif %}
                                 {% for subject in teacher.subjects.all %}
                                     <span class="subject-tag">{{ subject.name }}</span>
                                 {% endfor %}
@@ -180,8 +193,8 @@
                 {% empty %}
                     <div class="no-teachers">
                         <i class="bi bi-person-x" style="font-size: 3rem; color: var(--text-secondary);"></i>
-                        <h3>No teachers found</h3>
-                        <p>No teachers match your current filters.</p>
+                        <h3>No teaching staff found</h3>
+                        <p>No lecturers or teachers match your current filters.</p>
                     </div>
                 {% endfor %}
             </div>
@@ -224,72 +237,170 @@
         </main>
 
         <div id="teacherModal" class="modal">
-            <div class="modal-content">
+            <div class="modal-content lecturer-modal">
                 <div class="modal-header">
-                    <h2>➕ Add New Teacher</h2>
-                    <button class="modal-close closeModal">✕</button>
+                    <div>
+                        <span class="modal-eyebrow">Teaching Staff Enrollment</span>
+                        <h2>Add Lecturer / Teacher</h2>
+                    </div>
+                    <button type="button" class="modal-close closeModal" aria-label="Close form">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
                 </div>
                 <form id="teacherForm" data-url="{% url 'teacher_create' %}" data-csrf="{{ csrf_token }}" enctype="multipart/form-data">
                     {% csrf_token %}
-                    <div class="form-group">
-                        <label>First Name</label>
-                        <input type="text" name="first_name" class="form-control" placeholder="Enter first name" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Last Name</label>
-                        <input type="text" name="last_name" class="form-control" placeholder="Enter last name" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Email Address</label>
-                        <input type="email" name="email" class="form-control" placeholder="teacher@christacademy.edu" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Phone Number</label>
-                        <input type="tel" name="phone_number" class="form-control" placeholder="+233 XX XXX XXXX">
-                    </div>
-                    <div class="form-group">
-                        <label>Date of Birth</label>
-                        <input title="pick a date" type="date" name="date_of_birth" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label>Gender</label>
-                        <select title="select gender" name="gender" class="form-control">
-                            <option value="">Select gender...</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Profile Picture</label>
-                        <input title="select a profile for a taecher" type="file" name="profile_picture" class="form-control" accept="image/*">
-                    </div>
-                    <div class="form-group">
-                        <label>Employment Type</label>
-                        <select title="select employment type name="employment_type" class="form-control" required>
-                            <option value="">Select type...</option>
-                            <option value="full_time">Full Time</option>
-                            <option value="part_time">Part Time</option>
-                            <option value="contract">Contract</option>
-                            <option value="substitute">Substitute</option>
-                        </select>
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="bi bi-person-vcard"></i>
+                            <div>
+                                <h3>Personal Details</h3>
+                                <p>These details create the lecturer login account.</p>
+                            </div>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="teacher_first_name">First Name</label>
+                                <input id="teacher_first_name" type="text" name="first_name" class="form-control" placeholder="Enter first name" autocomplete="given-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="teacher_last_name">Last Name</label>
+                                <input id="teacher_last_name" type="text" name="last_name" class="form-control" placeholder="Enter last name" autocomplete="family-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="teacher_email">Email Address</label>
+                                <input id="teacher_email" type="email" name="email" class="form-control" placeholder="teacher@whitestown.edu.gh" autocomplete="email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="teacher_phone">Phone Number</label>
+                                <input id="teacher_phone" type="tel" name="phone_number" class="form-control" placeholder="+233 XX XXX XXXX" autocomplete="tel">
+                            </div>
+                            <div class="form-group">
+                                <label for="teacher_gender">Gender</label>
+                                <select id="teacher_gender" title="Select gender" name="gender" class="form-control">
+                                    <option value="">Select gender...</option>
+                                    <option value="M">Male</option>
+                                    <option value="F">Female</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="teacher_dob">Date of Birth</label>
+                                <input id="teacher_dob" title="Pick date of birth" type="date" name="date_of_birth" class="form-control">
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                            <input name="is_class_teacher" type="checkbox" style="width: 18px; height: 18px;">
-                            <span>Is Class Teacher</span>
-                        </label>
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="bi bi-briefcase"></i>
+                            <div>
+                                <h3>Employment Details</h3>
+                                <p>Classify the staff member for school operations and reports.</p>
+                            </div>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="employment_type">Employment Type</label>
+                                <select id="employment_type" title="Select employment type" name="employment_type" class="form-control" required>
+                                    <option value="">Select type...</option>
+                                    {% for key, label in context.employment_types %}
+                                        <option value="{{ key }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="teaching_level">Teaching Level</label>
+                                <select id="teaching_level" title="Select teaching level" name="teaching_level" class="form-control" required>
+                                    <option value="">Select level...</option>
+                                    {% for key, label in context.teaching_levels %}
+                                        <option value="{{ key }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="teacher_department">Department</label>
+                                <input id="teacher_department" list="department_options" type="text" name="department" class="form-control" placeholder="Primary, JHS, Languages, Science">
+                                <datalist id="department_options">
+                                    <option value="Early Years">
+                                    <option value="Primary">
+                                    <option value="Junior High School">
+                                    <option value="Languages">
+                                    <option value="Mathematics and Science">
+                                    <option value="Creative Arts">
+                                    <option value="Computing">
+                                    <option value="Religious and Moral Education">
+                                </datalist>
+                            </div>
+                            <div class="form-group">
+                                <label for="teacher_job_title">Job Title</label>
+                                <input id="teacher_job_title" list="job_title_options" type="text" name="job_title" class="form-control" value="Teacher">
+                                <datalist id="job_title_options">
+                                    <option value="Class Teacher">
+                                    <option value="Subject Teacher">
+                                    <option value="Assistant Teacher">
+                                    <option value="Head of Department">
+                                    <option value="Guidance and Counselling Teacher">
+                                </datalist>
+                            </div>
+                            <div class="form-group">
+                                <label for="highest_qualification">Highest Qualification</label>
+                                <input id="highest_qualification" list="qualification_options" type="text" name="highest_qualification" class="form-control" placeholder="Diploma, Degree, PGDE, etc.">
+                                <datalist id="qualification_options">
+                                    <option value="Diploma in Basic Education">
+                                    <option value="Bachelor of Education">
+                                    <option value="Bachelor Degree">
+                                    <option value="Postgraduate Diploma in Education">
+                                    <option value="Master's Degree">
+                                    <option value="NVTI / Professional Certificate">
+                                </datalist>
+                            </div>
+                            <div class="form-group">
+                                <label for="appointment_date">Appointment Date</label>
+                                <input id="appointment_date" title="Pick appointment date" type="date" name="appointment_date" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="bi bi-shield-lock"></i>
+                            <div>
+                                <h3>Login & Profile</h3>
+                                <p>The system generates the username. Set a temporary password for first login.</p>
+                            </div>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="teacher_password">Temporary Password</label>
+                                <input id="teacher_password" type="password" name="password" class="form-control" placeholder="Leave blank to use changeme123" autocomplete="new-password">
+                            </div>
+                            <div class="form-group">
+                                <label for="teacher_profile_picture">Profile Picture</label>
+                                <input id="teacher_profile_picture" title="Select a profile picture for the lecturer" type="file" name="profile_picture" class="form-control" accept="image/*">
+                            </div>
+                        </div>
+                        <div class="option-row">
+                            <label class="check-option">
+                                <input name="is_class_teacher" type="checkbox">
+                                <span>
+                                    <strong>Class teacher</strong>
+                                    <small>This lecturer can later be assigned to a specific class.</small>
+                                </span>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label for="teacher_notes">Notes</label>
+                            <textarea id="teacher_notes" name="notes" class="form-control" rows="3" placeholder="Special responsibilities, subjects handled, or employment notes"></textarea>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary closeModal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Add Teacher</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-person-plus"></i> Enroll Lecturer
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
-
     {% endblock content %}
 
     {% block js %}

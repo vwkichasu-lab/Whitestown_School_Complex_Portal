@@ -87,6 +87,13 @@ class TeacherProfile(models.Model):
         ('substitute', 'Substitute'),
     )
 
+    TEACHING_LEVEL_CHOICES = (
+        ('early_years', 'Early Years'),
+        ('primary', 'Primary'),
+        ('jhs', 'Junior High School'),
+        ('all_levels', 'All Levels'),
+    )
+
     user = models.OneToOneField(
         User, 
         on_delete=models.CASCADE, 
@@ -96,6 +103,11 @@ class TeacherProfile(models.Model):
     employee_id = models.CharField(max_length=20, unique=True, db_index=True)
     subjects = models.ManyToManyField(Subject, related_name='teachers', blank=True)
     employment_type = models.CharField(max_length=20, choices=EMPLOYMENT_TYPE_CHOICES, default='full_time')
+    teaching_level = models.CharField(max_length=20, choices=TEACHING_LEVEL_CHOICES, default='primary')
+    department = models.CharField(max_length=80, blank=True, null=True)
+    job_title = models.CharField(max_length=100, blank=True, null=True)
+    highest_qualification = models.CharField(max_length=120, blank=True, null=True)
+    appointment_date = models.DateField(blank=True, null=True)
     class_teacher_of = models.ForeignKey(
         ClassLevel, 
         on_delete=models.SET_NULL, 

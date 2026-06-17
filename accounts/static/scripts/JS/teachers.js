@@ -1,7 +1,9 @@
 import showToast from "/static/scripts/JS/admin_d.js"
 
-document.getElementById("openModal").onclick = openModal
-document.querySelectorAll(".closeModal").onclick = closeModal
+document.getElementById("openModal")?.addEventListener("click", openModal);
+document.querySelectorAll(".closeModal").forEach(button => {
+    button.addEventListener("click", closeModal);
+});
 
 function openModal() {
     document.getElementById('teacherModal').classList.add('show');
@@ -263,6 +265,26 @@ function showViewModal(teacherData) {
                             <span>${teacherData.employment_type || 'Not specified'}</span>
                         </div>
                         <div class="info-item">
+                            <label>Teaching Level</label>
+                            <span>${teacherData.teaching_level || 'Not specified'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Department</label>
+                            <span>${teacherData.department || 'Not provided'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Job Title</label>
+                            <span>${teacherData.job_title || 'Teacher'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Qualification</label>
+                            <span>${teacherData.highest_qualification || 'Not provided'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Appointment Date</label>
+                            <span>${teacherData.appointment_date ? new Date(teacherData.appointment_date).toLocaleDateString() : 'Not provided'}</span>
+                        </div>
+                        <div class="info-item">
                             <label>Gender</label>
                             <span>${teacherData.gender || 'Not specified'}</span>
                         </div>
@@ -352,6 +374,32 @@ function showEditModal(teacherData) {
                                 <option value="contract" ${teacherData.employment_type === 'contract' ? 'selected' : ''}>Contract</option>
                                 <option value="substitute" ${teacherData.employment_type === 'substitute' ? 'selected' : ''}>Substitute</option>
                             </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Teaching Level</label>
+                            <select name="teaching_level" class="form-control" required>
+                                <option value="">Select level...</option>
+                                <option value="early_years" ${teacherData.teaching_level === 'early_years' ? 'selected' : ''}>Early Years</option>
+                                <option value="primary" ${teacherData.teaching_level === 'primary' ? 'selected' : ''}>Primary</option>
+                                <option value="jhs" ${teacherData.teaching_level === 'jhs' ? 'selected' : ''}>Junior High School</option>
+                                <option value="all_levels" ${teacherData.teaching_level === 'all_levels' ? 'selected' : ''}>All Levels</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Department</label>
+                            <input type="text" name="department" class="form-control" value="${teacherData.department || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Job Title</label>
+                            <input type="text" name="job_title" class="form-control" value="${teacherData.job_title || 'Teacher'}">
+                        </div>
+                        <div class="form-group">
+                            <label>Highest Qualification</label>
+                            <input type="text" name="highest_qualification" class="form-control" value="${teacherData.highest_qualification || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Appointment Date</label>
+                            <input type="date" name="appointment_date" class="form-control" value="${teacherData.appointment_date || ''}">
                         </div>
                         <div class="form-group">
                             <label style="display: flex; align-items: center; gap: 8px;">
@@ -725,8 +773,15 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const formData = new FormData(this);
             const url = this.getAttribute('data-url');
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton?.innerHTML;
             
             try {
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Enrolling...';
+                }
+
                 const response = await fetch(url, {
                     method: 'POST',
                     body: formData,
@@ -740,6 +795,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (data.success) {
                     showToast(data.message, 'success');
+                    this.reset();
+                    closeModal();
                     setTimeout(() => {
                         window.location.reload();
                     }, 1500);
@@ -749,6 +806,11 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (error) {
                 console.error('Error saving teacher:', error);
                 showToast('An error occurred while saving teacher', 'error');
+            } finally {
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalButtonText;
+                }
             }
         });
     }

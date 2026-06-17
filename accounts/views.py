@@ -121,13 +121,19 @@ def register_teacher(request):
         date_of_birth = data.get("date_of_birth")
         profile_picture = request.FILES.get("profile_picture")
         employment_type = data.get("employment_type", "full_time")
+        teaching_level = data.get("teaching_level") or "primary"
+        department = data.get("department")
+        job_title = data.get("job_title") or "Teacher"
+        highest_qualification = data.get("highest_qualification")
+        appointment_date = data.get("appointment_date") or None
+        notes = data.get("notes")
         is_class_teacher = data.get("is_class_teacher") == "on" or data.get("is_class_teacher") == "true"
         class_teacher_of_id = data.get("class_teacher_of")
 
-        if not all([first_name, last_name, email]):
+        if not all([first_name, last_name, email, employment_type, teaching_level]):
             return JsonResponse({
                 'success': False, 
-                'error': 'First name, last name, and email are required.'
+                'error': 'First name, last name, email, employment type, and teaching level are required.'
             }, status=400)
         
         if User.objects.filter(email=email).exists():
@@ -159,6 +165,12 @@ def register_teacher(request):
             user=user,
             employee_id=employee_id,
             employment_type=employment_type,
+            teaching_level=teaching_level,
+            department=department,
+            job_title=job_title,
+            highest_qualification=highest_qualification,
+            appointment_date=appointment_date,
+            notes=notes,
             class_teacher_of=ClassLevel.objects.filter(id=class_teacher_of_id).first() if class_teacher_of_id else None
         )
         
@@ -357,6 +369,7 @@ def teacher_list(request):
     context = {
         'page_obj': page_obj,
         'employment_types': TeacherProfile.EMPLOYMENT_TYPE_CHOICES,
+        'teaching_levels': TeacherProfile.TEACHING_LEVEL_CHOICES,
         'emp_type': emp_type,
         'search': search,
         'status': status,
@@ -441,7 +454,11 @@ def user_update(request, user_id):
         if user.role == 'teacher' and hasattr(user, 'teacher_profile'):
             teacher_profile = user.teacher_profile
             teacher_profile.employment_type = data.get('employment_type', teacher_profile.employment_type)
-            teacher_profile.is_class_teacher = data.get('is_class_teacher') == 'on'
+            teacher_profile.teaching_level = data.get('teaching_level', teacher_profile.teaching_level)
+            teacher_profile.department = data.get('department', teacher_profile.department)
+            teacher_profile.job_title = data.get('job_title', teacher_profile.job_title)
+            teacher_profile.highest_qualification = data.get('highest_qualification', teacher_profile.highest_qualification)
+            teacher_profile.appointment_date = data.get('appointment_date') or teacher_profile.appointment_date
             teacher_profile.class_teacher_of_id = data.get('class_teacher_of') or None
             teacher_profile.is_active = data.get('is_active') == 'on'
             teacher_profile.notes = data.get('notes', teacher_profile.notes)
@@ -584,6 +601,11 @@ def get_user_data(request, user_id):
             data.update({
                 'employee_id': teacher_profile.employee_id,
                 'employment_type': teacher_profile.employment_type,
+                'teaching_level': teacher_profile.teaching_level,
+                'department': teacher_profile.department,
+                'job_title': teacher_profile.job_title,
+                'highest_qualification': teacher_profile.highest_qualification,
+                'appointment_date': teacher_profile.appointment_date.isoformat() if teacher_profile.appointment_date else None,
                 'is_class_teacher': teacher_profile.is_class_teacher,
                 'class_teacher_of': str(teacher_profile.class_teacher_of.id) if teacher_profile.class_teacher_of else None,
                 'is_active': teacher_profile.is_active,
@@ -623,7 +645,11 @@ def teacher_update(request, teacher_id):
         try:
             teacher.employee_id = request.POST.get('employee_id')
             teacher.employment_type = request.POST.get('employment_type')
-            teacher.is_class_teacher = request.POST.get('is_class_teacher') == 'on'
+            teacher.teaching_level = request.POST.get('teaching_level', teacher.teaching_level)
+            teacher.department = request.POST.get('department', teacher.department)
+            teacher.job_title = request.POST.get('job_title', teacher.job_title)
+            teacher.highest_qualification = request.POST.get('highest_qualification', teacher.highest_qualification)
+            teacher.appointment_date = request.POST.get('appointment_date') or teacher.appointment_date
             teacher.is_active = request.POST.get('is_active') == 'on'
             teacher.notes = request.POST.get('notes')
             
@@ -647,6 +673,7 @@ def teacher_update(request, teacher_id):
         'subjects': Subject.objects.all(),
         'classes': ClassLevel.objects.all(),
         'employment_types': TeacherProfile.EMPLOYMENT_TYPE_CHOICES,
+        'teaching_levels': TeacherProfile.TEACHING_LEVEL_CHOICES,
     }
     return render(request, 'accounts/teacher_form.html', context)
 
@@ -1577,6 +1604,11 @@ def update_profile(request):
         if user.role == 'teacher' and hasattr(user, 'teacher_profile'):
             teacher_profile = user.teacher_profile
             teacher_profile.employment_type = data.get('employment_type', teacher_profile.employment_type)
+            teacher_profile.teaching_level = data.get('teaching_level', teacher_profile.teaching_level)
+            teacher_profile.department = data.get('department', teacher_profile.department)
+            teacher_profile.job_title = data.get('job_title', teacher_profile.job_title)
+            teacher_profile.highest_qualification = data.get('highest_qualification', teacher_profile.highest_qualification)
+            teacher_profile.appointment_date = data.get('appointment_date') or teacher_profile.appointment_date
             teacher_profile.notes = data.get('notes', teacher_profile.notes)
             teacher_profile.save()
         
@@ -1692,6 +1724,11 @@ def get_own_profile_data(request):
             data.update({
                 'employee_id': teacher_profile.employee_id,
                 'employment_type': teacher_profile.employment_type,
+                'teaching_level': teacher_profile.teaching_level,
+                'department': teacher_profile.department,
+                'job_title': teacher_profile.job_title,
+                'highest_qualification': teacher_profile.highest_qualification,
+                'appointment_date': teacher_profile.appointment_date.isoformat() if teacher_profile.appointment_date else None,
                 'is_class_teacher': teacher_profile.is_class_teacher,
                 'class_teacher_of': str(teacher_profile.class_teacher_of.id) if teacher_profile.class_teacher_of else None,
                 'class_teacher_name': teacher_profile.class_teacher_of.name if teacher_profile.class_teacher_of else None,

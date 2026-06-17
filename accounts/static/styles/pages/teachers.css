@@ -631,6 +631,102 @@
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
+.lecturer-modal {
+    max-width: 980px;
+}
+
+.modal-eyebrow {
+    display: block;
+    color: var(--primary, #2563eb);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.form-section {
+    padding: 18px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 12px;
+    background: #f8fafc;
+}
+
+.section-title {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.section-title > i {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: #dbeafe;
+    color: var(--primary, #2563eb);
+    font-size: 1.1rem;
+}
+
+.section-title h3 {
+    margin: 0;
+    color: var(--text-primary, #0f172a);
+    font-size: 1rem;
+}
+
+.section-title p {
+    margin: 2px 0 0;
+    color: var(--text-secondary, #64748b);
+    font-size: 0.82rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.form-grid .form-group,
+.lecturer-modal .form-group {
+    margin-bottom: 0;
+}
+
+.option-row {
+    margin: 12px 0 14px;
+}
+
+.check-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.check-option input {
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+.check-option strong,
+.check-option small {
+    display: block;
+}
+
+.check-option small {
+    margin-top: 2px;
+    color: var(--text-secondary, #64748b);
+    font-size: 0.8rem;
+}
+
 .modal-header {
     display: flex;
     justify-content: space-between;
@@ -796,6 +892,14 @@ select.form-control[multiple] {
     
     .btn {
         width: 100%;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .section-title {
+        align-items: center;
     }
 }
 
