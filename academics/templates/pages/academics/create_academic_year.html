@@ -8,215 +8,350 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4 main-content">
-    <div class="row">
-        <div class="col-12">
-            <div class="card academic-year-form">
-                <div class="card-header">
-                    <h4 class="card-title">Create New Academic Year</h4>
-                </div>
-                <div class="card-body">
-                    <form id="createAcademicYearForm" method="POST">
-                        {% csrf_token %}
-                        
-                        <div class="form-section">
-                            <h5 class="form-section-title">Basic Information</h5>
-                            
-                            <div class="form-grid">
-                                <div class="form-group">
-                                    <label for="name">Academic Year Name *</label>
-                                    <input type="text" class="form-control" id="name" name="name" 
-                                           placeholder="e.g., 2025/2026" required>
-                                    <small class="form-text">Format: YYYY/YYYY. GES basic-school dates will be generated automatically.</small>
-                                </div>
-                            </div>
+<main class="main-content academic-year-setup">
+    <section class="setup-hero">
+        <div>
+            <span class="eyebrow">Academic Calendar Setup</span>
+            <h1>Create Academic Year</h1>
+            <p>Build the full Ghana basic-school year with terms, reopening dates, vacation dates, half-term breaks, holidays, and school activities.</p>
+        </div>
+        <a href="{% url 'academic_years_list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Academic Years
+        </a>
+    </section>
 
-                            <div class="date-input-group">
-                                <div class="form-group">
-                                    <label for="start_date">Start Date *</label>
-                                    <input type="date" class="form-control" id="start_date" name="start_date">
-                                </div>
-                                <div class="form-group">
-                                    <label for="end_date">End Date *</label>
-                                    <input type="date" class="form-control" id="end_date" name="end_date">
-                                </div>
-                            </div>
-                        </div>
+    <form id="createAcademicYearForm" method="POST" class="year-form">
+        {% csrf_token %}
 
-                        <div class="form-section">
-                            <h5 class="form-section-title">Settings</h5>
-                            
-                            <div class="checkbox-container" id="currentYearContainer">
-                                <input type="checkbox" class="form-check-input" id="is_current" name="is_current">
-                                <label class="form-check-label" for="is_current">
-                                    Set as current academic year
-                                </label>
-                            </div>
-                            <small class="form-text">
-                                If checked, this will become the current academic year and any previous current year will be unset.
-                            </small>
-                        </div>
-
-                        <div class="form-group" style="margin-top: 32px;">
-
-                            <a href="{% url 'academic_years_list' %}" class="btn btn-secondary">
-                                <i class="bi bi-arrow-left"></i>
-                                Back to Academic Year
-                            </a>
-
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-plus-circle"></i>
-                                Create Academic Year
-                            </button>
-                        </div>
-                        
-                    </form>
+        <section class="form-panel">
+            <div class="panel-heading">
+                <i class="bi bi-calendar2-range"></i>
+                <div>
+                    <h2>Year Details</h2>
+                    <p>Select or type the academic year. The calendar below will auto-fill and remain editable.</p>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="name">Academic Year Name</label>
+                    <input type="text" class="form-control" id="name" name="name" list="year_options" placeholder="2025/2026" required>
+                    <datalist id="year_options">
+                        <option value="2025/2026">
+                        <option value="2026/2027">
+                        <option value="2027/2028">
+                        <option value="2028/2029">
+                    </datalist>
+                    <small class="form-text">Use YYYY/YYYY. Example: 2025/2026.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="calendar_basis">Calendar Basis</label>
+                    <select id="calendar_basis" class="form-control" name="calendar_basis">
+                        <option value="ges_basic">GES Basic School Calendar</option>
+                        <option value="school_adjusted">GES Calendar with School Activities</option>
+                    </select>
+                    <small class="form-text">Use this as the source schedule, then adjust school-specific events below.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="start_date">Year Start Date</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="end_date">Year End Date</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" required>
+                </div>
+            </div>
+
+            <div class="option-grid">
+                <label class="check-card" id="currentYearContainer">
+                    <input type="checkbox" id="is_current" name="is_current" checked>
+                    <span>
+                        <strong>Set as current academic year</strong>
+                        <small>Other academic years will be unset automatically.</small>
+                    </span>
+                </label>
+
+                <div class="current-term-picker">
+                    <label for="current_term">Current Term</label>
+                    <select id="current_term" name="current_term" class="form-control">
+                        <option value="1">Term 1</option>
+                        <option value="2">Term 2</option>
+                        <option value="3">Term 3</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <section class="calendar-preview">
+            <div class="preview-header">
+                <div>
+                    <span class="eyebrow">Generated Terms</span>
+                    <h2>Term Calendar Details</h2>
+                </div>
+                <div class="summary-pill">
+                    <i class="bi bi-calendar-check"></i>
+                    <span id="schoolDaysSummary">0 school days</span>
+                </div>
+            </div>
+
+            <div class="term-grid">
+                {% for index in "123" %}
+                <article class="term-editor" data-term-index="{{ forloop.counter }}">
+                    <div class="term-title">
+                        <span>Term {{ forloop.counter }}</span>
+                        <strong id="term_{{ forloop.counter }}_weeks">0 weeks</strong>
+                    </div>
+                    <input type="hidden" name="term_{{ forloop.counter }}_name" value="{% if forloop.counter == 1 %}1st Term{% elif forloop.counter == 2 %}2nd Term{% else %}3rd Term{% endif %}">
+
+                    <div class="term-date-grid">
+                        <div class="form-group">
+                            <label for="term_{{ forloop.counter }}_start_date">Reopening</label>
+                            <input type="date" id="term_{{ forloop.counter }}_start_date" name="term_{{ forloop.counter }}_start_date" class="form-control term-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="term_{{ forloop.counter }}_end_date">Vacation</label>
+                            <input type="date" id="term_{{ forloop.counter }}_end_date" name="term_{{ forloop.counter }}_end_date" class="form-control term-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="term_{{ forloop.counter }}_vacation_start_date">Vacation Starts</label>
+                            <input type="date" id="term_{{ forloop.counter }}_vacation_start_date" name="term_{{ forloop.counter }}_vacation_start_date" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="term_{{ forloop.counter }}_vacation_end_date">Vacation Ends</label>
+                            <input type="date" id="term_{{ forloop.counter }}_vacation_end_date" name="term_{{ forloop.counter }}_vacation_end_date" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="term_{{ forloop.counter }}_half_term_start_date">Half-Term Starts</label>
+                            <input type="date" id="term_{{ forloop.counter }}_half_term_start_date" name="term_{{ forloop.counter }}_half_term_start_date" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="term_{{ forloop.counter }}_half_term_end_date">Half-Term Ends</label>
+                            <input type="date" id="term_{{ forloop.counter }}_half_term_end_date" name="term_{{ forloop.counter }}_half_term_end_date" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="term_{{ forloop.counter }}_holidays">Public Holidays</label>
+                        <textarea id="term_{{ forloop.counter }}_holidays" name="term_{{ forloop.counter }}_holidays" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="term_{{ forloop.counter }}_school_activities">School Activities</label>
+                        <textarea id="term_{{ forloop.counter }}_school_activities" name="term_{{ forloop.counter }}_school_activities" class="form-control" rows="2"></textarea>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="form-actions">
+            <a href="{% url 'academic_years_list' %}" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-calendar-plus"></i> Create Full Academic Year
+            </button>
+        </section>
+    </form>
+</main>
 {% endblock %}
 
 {% block js %}
 <script>
-// import showToast from "/static/scripts/JS/admin_d.js"
-
-document.getElementById('currentYearContainer').addEventListener('click', function(e) {
-    if (e.target.type !== 'checkbox') {
-        const checkbox = this.querySelector('input[type="checkbox"]');
-        checkbox.checked = !checkbox.checked;
-        this.classList.toggle('checked', checkbox.checked);
+const gesTemplates = {
+    1: {
+        name: "1st Term",
+        startMonth: 8,
+        startDay: 2,
+        endMonth: 11,
+        endDay: 18,
+        vacationStartMonth: 11,
+        vacationStartDay: 19,
+        vacationEndMonthOffset: 1,
+        vacationEndMonth: 0,
+        vacationEndDay: 7,
+        halfStartMonth: 9,
+        halfStartDay: 31,
+        halfEndMonth: 10,
+        halfEndDay: 3,
+        holidays: "Kwame Nkrumah Memorial Day; Farmers' Day",
+        activities: "Reopening; PTA meeting; mid-term break; end-of-term exams; vacation"
+    },
+    2: {
+        name: "2nd Term",
+        startMonthOffset: 1,
+        startMonth: 0,
+        startDay: 8,
+        endMonthOffset: 1,
+        endMonth: 3,
+        endDay: 1,
+        vacationStartMonthOffset: 1,
+        vacationStartMonth: 3,
+        vacationStartDay: 2,
+        vacationEndMonthOffset: 1,
+        vacationEndMonth: 3,
+        vacationEndDay: 20,
+        halfStartMonthOffset: 1,
+        halfStartMonth: 1,
+        halfStartDay: 26,
+        halfEndMonthOffset: 1,
+        halfEndMonth: 1,
+        halfEndDay: 27,
+        holidays: "Constitution Day; Independence Day; Eid ul-Fitr where applicable",
+        activities: "Reopening; open day; mid-term break; revision; vacation"
+    },
+    3: {
+        name: "3rd Term",
+        startMonthOffset: 1,
+        startMonth: 3,
+        startDay: 21,
+        endMonthOffset: 1,
+        endMonth: 6,
+        endDay: 23,
+        vacationStartMonthOffset: 1,
+        vacationStartMonth: 6,
+        vacationStartDay: 24,
+        halfStartMonthOffset: 1,
+        halfStartMonth: 5,
+        halfStartDay: 4,
+        halfEndMonthOffset: 1,
+        halfEndMonth: 5,
+        halfEndDay: 5,
+        holidays: "May Day; Eid al-Adha where applicable; BECE period where applicable",
+        activities: "Reopening; sports and culture activities; exams; speech and prize day; end-of-year vacation"
     }
-});
+};
 
-document.addEventListener('DOMContentLoaded', function() {
-    const checkbox = document.getElementById('is_current');
-    const container = document.getElementById('currentYearContainer');
-    container.classList.toggle('checked', checkbox.checked);
-});
-
-document.getElementById('createAcademicYearForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    
-    try {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Creating...';
-        this.classList.add('loading');
-        
-        const response = await fetch('{% url "create_academic_year" %}', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': '{{ csrf_token }}'
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            // Success case
-            if (typeof showToast === 'function') {
-                showToast(data.message, 'success');
-            } else {
-                alert('Success: ' + data.message);
-            }
-            
-            submitBtn.classList.add('success-pulse');
-            
-            setTimeout(() => {
-                {% if request.GET.next %}
-                    window.location.href = '{{ request.GET.next }}';
-                {% else %}
-                    window.location.href = '{% url "academic_years_list" %}';
-                {% endif %}
-            }, 1500);
-            
-        } else {
-            // Error case from server
-            const errorMessage = data.error || 'Failed to create academic year';
-            if (typeof showToast === 'function') {
-                showToast(errorMessage, 'error');
-            } else {
-                alert('Error: ' + errorMessage);
-            }
-        }
-        
-    } catch (error) {
-        console.error('Error creating academic year:', error);
-        const errorMessage = 'Network error occurred. Please check your connection and try again.';
-        
-        if (typeof showToast === 'function') {
-            showToast(errorMessage, 'error');
-        } else {
-            alert('Error: ' + errorMessage);
-        }
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-        this.classList.remove('loading');
-        submitBtn.classList.remove('success-pulse');
-    }
-});
-
-// Date validation
-const today = new Date().toISOString().split('T')[0];
-
-function applyGesDatesFromName() {
-    const nameField = document.getElementById('name');
-    const match = nameField.value.match(/(\d{4})\D+(\d{2,4})/);
-    if (!match) return;
-
-    const startYear = Number(match[1]);
-    document.getElementById('start_date').value = `${startYear}-09-02`;
-    document.getElementById('end_date').value = `${startYear + 1}-07-23`;
+function pad(value) {
+    return String(value).padStart(2, "0");
 }
 
-document.getElementById('name').addEventListener('input', applyGesDatesFromName);
+function formatDate(date) {
+    if (!date) return "";
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
 
-document.getElementById('start_date').addEventListener('change', function() {
-    const endDateField = document.getElementById('end_date');
-    
-    // Only set minimum end date if start date is selected
-    if (this.value) {
-        endDateField.min = this.value;
+function buildDate(startYear, month, day, offset = 0) {
+    return new Date(startYear + offset, month, day);
+}
+
+function parseStartYear() {
+    const match = document.getElementById("name").value.match(/(\d{4})\D+(\d{2,4})/);
+    return match ? Number(match[1]) : null;
+}
+
+function applyGesCalendar() {
+    const startYear = parseStartYear();
+    if (!startYear) return;
+
+    Object.entries(gesTemplates).forEach(([index, term]) => {
+        const termNumber = Number(index);
+        const start = buildDate(startYear, term.startMonth, term.startDay, term.startMonthOffset || 0);
+        const end = buildDate(startYear, term.endMonth, term.endDay, term.endMonthOffset || 0);
+        const vacationStart = buildDate(startYear, term.vacationStartMonth, term.vacationStartDay, term.vacationStartMonthOffset || 0);
+        const vacationEnd = term.vacationEndDay ? buildDate(startYear, term.vacationEndMonth, term.vacationEndDay, term.vacationEndMonthOffset || 0) : null;
+        const halfStart = buildDate(startYear, term.halfStartMonth, term.halfStartDay, term.halfStartMonthOffset || 0);
+        const halfEnd = buildDate(startYear, term.halfEndMonth, term.halfEndDay, term.halfEndMonthOffset || 0);
+
+        document.getElementById(`term_${termNumber}_start_date`).value = formatDate(start);
+        document.getElementById(`term_${termNumber}_end_date`).value = formatDate(end);
+        document.getElementById(`term_${termNumber}_vacation_start_date`).value = formatDate(vacationStart);
+        document.getElementById(`term_${termNumber}_vacation_end_date`).value = formatDate(vacationEnd);
+        document.getElementById(`term_${termNumber}_half_term_start_date`).value = formatDate(halfStart);
+        document.getElementById(`term_${termNumber}_half_term_end_date`).value = formatDate(halfEnd);
+        document.getElementById(`term_${termNumber}_holidays`).value = term.holidays;
+        document.getElementById(`term_${termNumber}_school_activities`).value = term.activities;
+    });
+
+    document.getElementById("start_date").value = document.getElementById("term_1_start_date").value;
+    document.getElementById("end_date").value = document.getElementById("term_3_end_date").value;
+    updateSummary();
+}
+
+function daysBetween(startValue, endValue) {
+    if (!startValue || !endValue) return 0;
+    const start = new Date(startValue);
+    const end = new Date(endValue);
+    return Math.max(Math.round((end - start) / 86400000) + 1, 0);
+}
+
+function updateSummary() {
+    let totalDays = 0;
+    for (let index = 1; index <= 3; index += 1) {
+        const start = document.getElementById(`term_${index}_start_date`).value;
+        const end = document.getElementById(`term_${index}_end_date`).value;
+        const days = daysBetween(start, end);
+        totalDays += days;
+        const weeks = Math.max(Math.round(days / 7), 0);
+        document.getElementById(`term_${index}_weeks`).textContent = `${weeks} week${weeks === 1 ? "" : "s"}; ${days} days`;
     }
-    
-    // Auto-generate name if empty
-    const nameField = document.getElementById('name');
-    if (!nameField.value && this.value) {
-        const startYear = new Date(this.value).getFullYear();
-        const endYear = startYear + 1;
-        nameField.value = `${startYear}-${endYear}`;
+    document.getElementById("schoolDaysSummary").textContent = `${totalDays} calendar days`;
+}
+
+function syncYearNameFromStartDate() {
+    const startDate = document.getElementById("start_date").value;
+    const name = document.getElementById("name");
+    if (!name.value && startDate) {
+        const startYear = new Date(startDate).getFullYear();
+        name.value = `${startYear}/${startYear + 1}`;
+    }
+}
+
+document.getElementById("name").addEventListener("input", applyGesCalendar);
+document.getElementById("start_date").addEventListener("change", syncYearNameFromStartDate);
+document.querySelectorAll(".term-date").forEach(input => input.addEventListener("change", updateSummary));
+
+document.getElementById("currentYearContainer").addEventListener("click", function(event) {
+    if (event.target.type !== "checkbox") {
+        const checkbox = this.querySelector("input[type='checkbox']");
+        checkbox.checked = !checkbox.checked;
+    }
+    this.classList.toggle("checked", this.querySelector("input[type='checkbox']").checked);
+});
+
+document.getElementById("createAcademicYearForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
+    const submitButton = this.querySelector("button[type='submit']");
+    const originalText = submitButton.innerHTML;
+    const formData = new FormData(this);
+
+    try {
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Creating...';
+
+        const response = await fetch('{% url "create_academic_year" %}', {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": "{{ csrf_token }}"
+            }
+        });
+
+        const data = await response.json();
+        if (!data.success) {
+            alert(data.error || "Failed to create academic year");
+            return;
+        }
+
+        alert(data.message);
+        window.location.href = '{% url "terms_list" %}';
+    } catch (error) {
+        alert("Network error occurred. Please try again.");
+    } finally {
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalText;
     }
 });
 
-document.getElementById('end_date').addEventListener('change', function() {
-    const startDate = document.getElementById('start_date').value;
-    const endDate = this.value;
-    
-    if (startDate && endDate) {
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        
-        if (end <= start) {
-            if (typeof showToast === 'function') {
-                showToast('End date must be after start date', 'error');
-            } else {
-                alert('Error: End date must be after start date');
-            }
-            this.value = '';
-        }
-    }
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("currentYearContainer").classList.add("checked");
+    const currentYear = new Date().getFullYear();
+    document.getElementById("name").value = `${currentYear}/${currentYear + 1}`;
+    applyGesCalendar();
 });
 </script>
 {% endblock %}

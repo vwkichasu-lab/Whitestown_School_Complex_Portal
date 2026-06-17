@@ -151,6 +151,45 @@ def ensure_ges_terms(academic_year):
     return created
 
 
+def academic_year_terms_from_post(data, academic_year):
+    start_year = parse_academic_year_start(academic_year.name) or academic_year.start_date.year
+    defaults = ges_basic_calendar_for_year(start_year)
+    terms = []
+
+    for index, default in enumerate(defaults, start=1):
+        prefix = f"term_{index}_"
+
+        def date_value(field):
+            value = data.get(f"{prefix}{field}")
+            if value:
+                return timezone.datetime.strptime(value, "%Y-%m-%d").date()
+            return default.get(field)
+
+        terms.append({
+            "name": data.get(f"{prefix}name") or default["name"],
+            "start_date": date_value("start_date"),
+            "end_date": date_value("end_date"),
+            "vacation_start_date": date_value("vacation_start_date"),
+            "vacation_end_date": date_value("vacation_end_date"),
+            "half_term_start_date": date_value("half_term_start_date"),
+            "half_term_end_date": date_value("half_term_end_date"),
+            "holidays": data.get(f"{prefix}holidays") or default.get("holidays"),
+            "school_activities": data.get(f"{prefix}school_activities") or default.get("school_activities"),
+            "is_current": data.get("current_term") == str(index),
+        })
+
+    return terms
+
+
+def save_academic_year_terms(academic_year, term_data):
+    for term in term_data:
+        Term.objects.update_or_create(
+            academic_year=academic_year,
+            name=term["name"],
+            defaults=term,
+        )
+
+
 
 @login_required
 def subject_list(request):
@@ -876,7 +915,10 @@ def create_academic_year(request):
             )
             
             academic_year.save()
-            ensure_ges_terms(academic_year)
+            term_data = academic_year_terms_from_post(data, academic_year)
+            if not any(term["is_current"] for term in term_data) and academic_year.is_current and term_data:
+                term_data[0]["is_current"] = True
+            save_academic_year_terms(academic_year, term_data)
             
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({
