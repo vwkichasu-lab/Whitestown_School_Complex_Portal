@@ -11,6 +11,36 @@ function compactCode(value) {
     return (value || "").replace(/[^a-z0-9]/gi, "").toUpperCase();
 }
 
+function divisionPrefix(division, level = "") {
+    const source = `${division} ${level}`.toLowerCase();
+    if (source.includes("jhs") || source.includes("junior high")) return "JHS";
+    if (source.includes("primary") || source.includes("basic")) return "PRI";
+    if (source.includes("kindergarten") || source.includes("kg")) return "KG";
+    if (source.includes("early") || source.includes("nursery")) return "EY";
+    return compactCode(division).slice(0, 4) || "CLS";
+}
+
+function levelCode(level) {
+    const jhs = (level || "").match(/\bJHS\s*(\d+)/i);
+    if (jhs) return `B${6 + Number(jhs[1])}`;
+
+    const basic = (level || "").match(/\bBasic\s*(\d+)/i);
+    if (basic) return `B${Number(basic[1])}`;
+
+    const kg = (level || "").match(/\b(?:KG|Kindergarten)\s*(\d+)/i);
+    if (kg) return `KG${Number(kg[1])}`;
+
+    const nursery = (level || "").match(/\bNursery\s*(\d+)/i);
+    if (nursery) return `N${Number(nursery[1])}`;
+
+    return compactCode(level).slice(0, 8) || "CLASS";
+}
+
+function buildClassCode(division, level, stream = "") {
+    const streamCode = compactCode(stream).slice(0, 1);
+    return `${divisionPrefix(division, level)}-${levelCode(level)}${streamCode}`;
+}
+
 function openModal() {
     if (modal) modal.style.display = "flex";
 }
@@ -26,8 +56,7 @@ function updateGeneratedClass() {
     const code = document.getElementById("classCode");
 
     if (code) {
-        const generated = ["WSC", division, level, stream].map(compactCode).filter(Boolean).join("-");
-        code.value = generated;
+        code.value = buildClassCode(division, level, stream);
     }
 }
 

@@ -92,40 +92,64 @@
 }
 
 .class-card {
+    display: grid;
+    gap: 14px;
     background: #fff;
     border: 1px solid rgba(37, 99, 235, 0.18);
     border-radius: 8px;
-    padding: 18px;
+    padding: 16px;
     box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), inset 0 0 20px rgba(37, 99, 235, 0.08);
+    overflow: hidden;
 }
 
 .class-card-top {
-    display: flex;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: 108px minmax(0, 1fr);
+    align-items: stretch;
     gap: 12px;
-    margin-bottom: 16px;
 }
 
 .class-badge {
-    width: 64px;
-    min-height: 54px;
+    min-height: 72px;
     border-radius: 8px;
-    display: flex;
-    align-items: center;
+    display: grid;
+    align-content: center;
     justify-content: center;
-    padding: 8px;
+    gap: 4px;
+    padding: 10px 12px;
     text-align: center;
-    overflow-wrap: anywhere;
-    background: #eff6ff;
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border: 1px solid #bfdbfe;
     color: var(--primary-dark);
-    font-size: 0.72rem;
+}
+
+.class-badge span {
+    color: #64748b;
+    font-size: 0.64rem;
     font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.class-badge strong {
+    color: #1e40af;
+    font-size: 1.05rem;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.class-heading {
+    min-width: 0;
+    padding: 10px 0;
 }
 
 .class-card h2 {
-    font-size: 1.1rem;
+    font-size: 1.08rem;
     margin: 0 0 4px;
     color: var(--text-primary);
+    line-height: 1.25;
+    overflow-wrap: anywhere;
 }
 
 .class-card p {
@@ -138,7 +162,6 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
-    margin-bottom: 14px;
 }
 
 .class-metrics div,
@@ -168,7 +191,7 @@
 
 .handler-block,
 .subject-preview {
-    margin-bottom: 12px;
+    margin-bottom: 0;
 }
 
 .subject-preview div,
@@ -191,6 +214,7 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
+    margin-top: 2px;
 }
 
 .empty-setup {
@@ -336,5 +360,25 @@
     .detail-grid,
     .class-actions {
         grid-template-columns: 1fr;
+    }
+
+    .class-board {
+        grid-template-columns: 1fr;
+    }
+
+    .class-card-top {
+        grid-template-columns: 1fr;
+    }
+
+    .class-badge {
+        min-height: auto;
+        grid-template-columns: auto 1fr;
+        justify-content: stretch;
+        align-items: center;
+        text-align: left;
+    }
+
+    .class-badge strong {
+        justify-self: end;
     }
 }

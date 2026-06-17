@@ -76,6 +76,61 @@ def build_division_code(division_name, academic_year_badge):
     return f"{SCHOOL_CODE}-{normalize_code(division_name)}-{normalize_code(academic_year_badge)}"
 
 
+def class_division_prefix(division_name, level_name=""):
+    source = f"{division_name} {level_name}".lower()
+    if "jhs" in source or "junior high" in source:
+        return "JHS"
+    if "primary" in source or "basic" in source:
+        return "PRI"
+    if "kindergarten" in source or "kg" in source:
+        return "KG"
+    if "early" in source or "nursery" in source:
+        return "EY"
+    return normalize_code(division_name or "CLS")[:4]
+
+
+def class_level_code(level_name):
+    source = level_name or ""
+    jhs_match = re.search(r'\bJHS\s*(\d+)', source, re.IGNORECASE)
+    if jhs_match:
+        return f"B{6 + int(jhs_match.group(1))}"
+
+    basic_match = re.search(r'\bBasic\s*(\d+)', source, re.IGNORECASE)
+    if basic_match:
+        return f"B{int(basic_match.group(1))}"
+
+    kg_match = re.search(r'\b(?:KG|Kindergarten)\s*(\d+)', source, re.IGNORECASE)
+    if kg_match:
+        return f"KG{int(kg_match.group(1))}"
+
+    nursery_match = re.search(r'\bNursery\s*(\d+)', source, re.IGNORECASE)
+    if nursery_match:
+        return f"N{int(nursery_match.group(1))}"
+
+    return normalize_code(source)[:8] or "CLASS"
+
+
+def build_class_code(division_name, level_name, stream_name=""):
+    prefix = class_division_prefix(division_name, level_name)
+    level_code = class_level_code(level_name)
+    stream_code = re.sub(r'[^A-Za-z0-9]+', '', stream_name or '').upper()[:1]
+    return f"{prefix}-{level_code}{stream_code}" if stream_code else f"{prefix}-{level_code}"
+
+
+def infer_class_stream(level_name):
+    source = (level_name or "").strip()
+    match = re.search(
+        r'\b(?:JHS|Basic|KG|Kindergarten|Nursery)\s*\d+\s+([A-Z])$',
+        source,
+        re.IGNORECASE,
+    )
+    return match.group(1).upper() if match else ""
+
+
+def is_clean_class_code(code):
+    return bool(re.fullmatch(r'(?:JHS|PRI)-B\d{1,2}[A-Z]?|KG-KG\d[A-Z]?|EY-N\d[A-Z]?', code or ""))
+
+
 def ensure_ges_basic_subjects():
     for item in GES_BASIC_SUBJECTS:
         Subject.objects.get_or_create(
@@ -395,6 +450,15 @@ def class_list(request):
     paginator = Paginator(classes, 9)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+
+    for class_level in page_obj:
+        code = class_level.code or ""
+        generated_code = build_class_code(
+            class_level.division_name,
+            class_level.name,
+            infer_class_stream(class_level.name),
+        )
+        class_level.display_code = code if is_clean_class_code(code) else generated_code
     
     context = {
         'page_obj': page_obj,
@@ -506,7 +570,7 @@ def class_create(request):
                     continue
 
                 class_name = f"{level_name} - {division_name}"
-                class_code = f"{division_code}-{level_code}"
+                class_code = build_class_code(division_name, level_name)
 
                 class_level, created = ClassLevel.objects.get_or_create(
                     name=class_name,
@@ -548,7 +612,7 @@ def class_create(request):
                     streams = [streams]
                 for stream_name in streams:
                     stream_name = (stream_name or "A").strip().upper()
-                    stream_code = f"{class_code}-{normalize_code(stream_name)}"
+                    stream_code = build_class_code(division_name, level_name, stream_name)
                     ClassStream.objects.update_or_create(
                         class_level=class_level,
                         name=stream_name,
@@ -583,6 +647,9 @@ def class_create(request):
         division_code = data.get("division_code")
         academic_year_badge = data.get("academic_year_badge")
         subject_ids = data.getlist("subjects") if hasattr(data, 'getlist') else data.get("subjects", [])
+        stream_name = data.get("stream", "")
+        if not code:
+            code = build_class_code(division_name, name, stream_name)
         
         if not name:
             return JsonResponse({

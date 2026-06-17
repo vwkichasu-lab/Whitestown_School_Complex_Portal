@@ -53,8 +53,11 @@
         {% for class in context.page_obj %}
         <article class="class-card" data-class-id="{{ class.id }}">
             <div class="class-card-top">
-                <div class="class-badge">{{ class.code|default:"CLS" }}</div>
-                <div>
+                <div class="class-badge">
+                    <span>Code</span>
+                    <strong>{% firstof class.display_code class.code "CLS" %}</strong>
+                </div>
+                <div class="class-heading">
                     <h2>{{ class.name }}</h2>
                     <p>{{ class.division_name|default:"General" }}</p>
                 </div>
@@ -153,6 +156,7 @@
                 <div class="form-group">
                     <label>Class Code *</label>
                     <input type="text" name="code" id="classCode" class="form-control" required>
+                    <small class="form-text">Auto-generated format: JHS-B7 or JHS-B7A.</small>
                 </div>
                 <div class="form-group">
                     <label>Capacity</label>
