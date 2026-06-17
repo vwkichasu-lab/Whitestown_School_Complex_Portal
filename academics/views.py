@@ -1093,11 +1093,16 @@ def assign_subjects_to_class(request, class_id):
         
         class_subjects = []
         for subject in subjects:
+            teacher_id = data.get(f"teacher_{subject.id}") or data.get(f"teacher_{str(subject.id)}")
+            teacher = None
+            if teacher_id:
+                teacher = get_object_or_404(User, id=teacher_id, role='teacher')
             class_subjects.append(
                 ClassSubject(
                     class_level=class_level,
                     subject=subject,
-                    academic_year=academic_year
+                    academic_year=academic_year,
+                    teacher=teacher
                 )
             )
         
@@ -1107,6 +1112,7 @@ def assign_subjects_to_class(request, class_id):
             'success': True,
             'message': f'Successfully updated subjects for {class_level.name}.',
             'subjects_count': subjects.count(),
+            'assigned_teachers_count': sum(1 for item in class_subjects if item.teacher_id),
         }
         
         return JsonResponse(response_data)

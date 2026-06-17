@@ -263,10 +263,12 @@ async function manageSubjects(classId) {
                     </div>
                     <div class="subject-check-grid compact">
                         ${(subjectsData.subjects || []).map(subject => `
-                            <label>
-                                <input type="checkbox" name="subjects" value="${subject.id}" ${selectedIds.has(String(subject.id)) ? "checked" : ""}>
-                                <span>${subject.name}</span>
-                                <small>${subject.code}</small>
+                            <div class="subject-assignment-row">
+                                <label class="subject-check-row">
+                                    <input type="checkbox" name="subjects" value="${subject.id}" ${selectedIds.has(String(subject.id)) ? "checked" : ""}>
+                                    <span>${subject.name}</span>
+                                    <small>${subject.code}</small>
+                                </label>
                                 <select name="teacher_${subject.id}" class="form-control subject-teacher-select">
                                     <option value="">Teacher later</option>
                                     ${(teachersData.teachers || []).map(teacher => `
@@ -275,7 +277,7 @@ async function manageSubjects(classId) {
                                         </option>
                                     `).join("")}
                                 </select>
-                            </label>
+                            </div>
                         `).join("")}
                     </div>
                 </form>
@@ -299,26 +301,8 @@ async function manageSubjects(classId) {
             });
             const result = await response.json();
             if (result.success) {
-                const academicYearId = event.target.querySelector('[name="academic_year"]').value;
-                const selectedSubjects = Array.from(event.target.querySelectorAll('[name="subjects"]:checked'));
-                await Promise.all(selectedSubjects.map(input => {
-                    const teacherId = event.target.querySelector(`[name="teacher_${input.value}"]`)?.value || "";
-                    if (!teacherId) return Promise.resolve();
-                    const teacherData = new FormData();
-                    teacherData.append("subject_id", input.value);
-                    teacherData.append("class_level_id", classId);
-                    teacherData.append("teacher_id", teacherId);
-                    teacherData.append("academic_year_id", academicYearId);
-                    return fetch("/academics/subjects/assign-teacher-to-class/", {
-                        method: "POST",
-                        body: teacherData,
-                        headers: {
-                            "X-CSRFToken": getCsrfToken(),
-                            "X-Requested-With": "XMLHttpRequest",
-                        },
-                    });
-                }));
-                showToast(result.message, "success");
+                const assigned = result.assigned_teachers_count || 0;
+                showToast(`${result.message} ${assigned} teacher${assigned === 1 ? "" : "s"} assigned.`, "success");
                 setTimeout(() => window.location.reload(), 900);
             } else {
                 showToast(result.error || "Failed to save subjects", "error");
